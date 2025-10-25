@@ -22,8 +22,7 @@ export function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      setLoading(true);
-      // Load user profile from blockchain
+      setLoading(true);
       if (publicKey) {
         const profile: UserProfile = {
           walletAddress: publicKey.toString(),
@@ -40,7 +39,6 @@ export function Dashboard() {
       }
       setLoading(false);
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
       toast.error('Failed to load dashboard data');
       setLoading(false);
     }
@@ -64,17 +62,17 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+        {}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-black">Welcome back, {userProfile?.name}!</h1>
           <p className="text-black mt-2">Continue your learning journey with APEC LMS</p>
         </div>
 
-        {/* Stats Cards */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="card">
             <div className="flex items-center">
-  
+
               <div className="ml-4">
                 <p className="text-sm font-medium text-black">Courses Enrolled</p>
                 <p className="text-2xl font-bold text-black">{userProfile?.enrolledCourses.length || 0}</p>
@@ -84,7 +82,7 @@ export function Dashboard() {
 
           <div className="card">
             <div className="flex items-center">
-        
+
               <div className="ml-4">
                 <p className="text-sm font-medium text-black">Achievements</p>
                 <p className="text-2xl font-bold text-black">{userProfile?.achievements.length || 0}</p>
@@ -94,7 +92,7 @@ export function Dashboard() {
 
           <div className="card">
             <div className="flex items-center">
-          
+
               <div className="ml-4">
                 <p className="text-sm font-medium text-black">Tokens Earned</p>
                 <p className="text-2xl font-bold text-black">{userProfile?.totalTokens || 0}</p>
@@ -104,7 +102,7 @@ export function Dashboard() {
 
           <div className="card">
             <div className="flex items-center">
-        
+
               <div className="ml-4">
                 <p className="text-sm font-medium text-black">Certificates</p>
                 <p className="text-2xl font-bold text-black">{userProfile?.certificates.length || 0}</p>
@@ -113,7 +111,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {}
         <div className="border-b-2 border-blue-600 mb-8">
           <nav className="-mb-px flex space-x-8">
             {tabs.map((tab) => (
@@ -132,7 +130,7 @@ export function Dashboard() {
           </nav>
         </div>
 
-        {/* Tab Content */}
+        {}
         <div className="space-y-8">
           {activeTab === 'overview' && <OverviewTab userProfile={userProfile} />}
           {activeTab === 'courses' && <CoursesTab courses={courses} />}
@@ -147,7 +145,7 @@ export function Dashboard() {
 function OverviewTab({ userProfile }: { userProfile: UserProfile | null }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* Recent Activity */}
+      {}
       <div className="card">
         <h3 className="text-lg font-semibold text-black mb-4">Recent Activity</h3>
         <div className="space-y-4">
@@ -181,7 +179,7 @@ function OverviewTab({ userProfile }: { userProfile: UserProfile | null }) {
         </div>
       </div>
 
-      {/* Learning Progress */}
+      {}
       <div className="card">
         <h3 className="text-lg font-semibold text-black mb-4">Learning Progress</h3>
         <div className="space-y-6">

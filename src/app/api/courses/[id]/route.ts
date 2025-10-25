@@ -10,9 +10,7 @@ export async function GET(
 
     if (!courseId) {
       return NextResponse.json({ error: 'Course ID is required' }, { status: 400 });
-    }
-
-    // Get course with instructor details
+    }
     const course = await (prisma as any).course.findUnique({
       where: { id: courseId },
       include: {
@@ -61,7 +59,6 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching course:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

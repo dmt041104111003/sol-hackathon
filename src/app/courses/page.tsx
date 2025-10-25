@@ -42,13 +42,10 @@ export default function CoursesPage() {
         setAllCourses(data.courses);
       }
     } catch (error) {
-      console.error('Error loading courses:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Calculate pagination
+  };
   const totalPages = Math.ceil(allCourses.length / coursesPerPage);
   const startIndex = (currentPage - 1) * coursesPerPage;
   const endIndex = startIndex + coursesPerPage;
@@ -65,7 +62,6 @@ export default function CoursesPage() {
       return;
     }
 
-    // Check if user is an educator
     if (session.user?.role === 'EDUCATOR') {
       alert('Educators cannot enroll in courses. Only students can enroll.');
       return;
@@ -77,8 +73,7 @@ export default function CoursesPage() {
 
     try {
       setEnrolling(course.id);
-      
-      // Confirm payment
+
       const confirmPayment = confirm(
         `Enroll in "${course.title}" for ${course.price} SOL?\n\nThis will process payment through your Solana wallet.`
       );
@@ -87,8 +82,6 @@ export default function CoursesPage() {
         return;
       }
 
-      // First, get instructor wallet address from enroll API
-      console.log('Getting instructor wallet address...');
       const preEnrollResponse = await fetch('/api/enroll', {
         method: 'POST',
         headers: {
@@ -97,7 +90,7 @@ export default function CoursesPage() {
         body: JSON.stringify({
           courseId: course.id,
           walletAddress: publicKey.toString(),
-          preCheck: true, // Just get instructor info, don't create enrollment yet
+          preCheck: true,
         }),
       });
 
@@ -109,17 +102,11 @@ export default function CoursesPage() {
       const preEnrollData = await preEnrollResponse.json();
       const instructorWalletAddress = preEnrollData.instructorWalletAddress;
 
-      // Process payment through Solana
-      console.log('Processing payment through Solana wallet...');
-      
-      // Create a transfer transaction for payment to instructor
       const { Connection, Transaction, SystemProgram, LAMPORTS_PER_SOL, PublicKey } = await import('@solana/web3.js');
       const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
-      
-      // Convert price to lamports
+
       const lamports = Math.floor(course.price * LAMPORTS_PER_SOL);
-      
-      // Create transaction to send payment to instructor
+
       const instructorWallet = new PublicKey(instructorWalletAddress);
       const transaction = new Transaction().add(
         SystemProgram.transfer({
@@ -127,27 +114,19 @@ export default function CoursesPage() {
           toPubkey: instructorWallet, // Send to instructor's wallet
           lamports: lamports,
         })
-      );
-
-      // Get recent blockhash
+      );
       const { blockhash } = await connection.getLatestBlockhash();
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
-      // Sign and send transaction
       if (!signTransaction) {
         throw new Error('Wallet does not support signing transactions');
       }
       const signedTransaction = await signTransaction(transaction);
       const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-      
-      console.log('Payment transaction sent:', signature);
-      
-      // Wait for confirmation
-      await connection.confirmTransaction(signature, 'confirmed');
-      console.log('Payment confirmed!');
 
-      // Now call enrollment API to create enrollment
+      await connection.confirmTransaction(signature, 'confirmed');
+
       const response = await fetch('/api/enroll', {
         method: 'POST',
         headers: {
@@ -161,15 +140,13 @@ export default function CoursesPage() {
       });
 
       if (response.ok) {
-        alert('Successfully enrolled in the course!');
-        // Optionally redirect to student dashboard
+        alert('Successfully enrolled in the course!');
         router.push('/dashboard/student');
       } else {
         const error = await response.json();
         alert(`Enrollment failed: ${error.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Enrollment error:', error);
       alert('Enrollment failed. Please try again.');
     } finally {
       setEnrolling(null);
@@ -203,7 +180,7 @@ export default function CoursesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentCourses.map((course) => (
               <div key={course.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow flex flex-col h-full">
-                {/* Header - cố định chiều cao */}
+                {}
                 <div className="mb-4 min-h-[120px]">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2 leading-tight">
                     {course.title}
@@ -213,7 +190,7 @@ export default function CoursesPage() {
                   </p>
                 </div>
 
-                {/* Content - flex-grow để đẩy button xuống dưới */}
+                {}
                 <div className="flex-grow flex flex-col justify-center">
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between items-center">
@@ -235,9 +212,9 @@ export default function CoursesPage() {
                   </div>
                 </div>
 
-                {/* Button - luôn ở dưới cùng với margin cố định */}
+                {}
                 <div className="mt-8 pt-4">
-                  <button 
+                  <button
                     onClick={() => handleEnroll(course)}
                     disabled={enrolling === course.id || session?.user?.role === 'EDUCATOR'}
                     className={`w-full py-3 px-4 rounded-md transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -246,12 +223,12 @@ export default function CoursesPage() {
                         : 'bg-blue-600 text-white hover:bg-blue-700'
                     }`}
                   >
-                    {enrolling === course.id 
-                      ? 'Processing...' 
+                    {enrolling === course.id
+                      ? 'Processing...'
                       : session?.user?.role === 'EDUCATOR'
                         ? 'Educators Cannot Enroll'
-                        : connected 
-                          ? `Enroll - ${(course.price * 200).toFixed(2)} USD` 
+                        : connected
+                          ? `Enroll - ${(course.price * 200).toFixed(2)} USD`
                           : 'Connect Wallet'
                     }
                   </button>
@@ -266,11 +243,11 @@ export default function CoursesPage() {
           </div>
         )}
 
-        {/* Pagination */}
+        {}
         {totalPages > 1 && (
           <div className="mt-12 flex justify-center">
             <nav className="flex items-center space-x-2">
-              {/* Previous button */}
+              {}
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
@@ -279,7 +256,7 @@ export default function CoursesPage() {
                 Previous
               </button>
 
-              {/* Page numbers */}
+              {}
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
@@ -294,7 +271,7 @@ export default function CoursesPage() {
                 </button>
               ))}
 
-              {/* Next button */}
+              {}
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -306,7 +283,7 @@ export default function CoursesPage() {
           </div>
         )}
 
-        {/* Page info */}
+        {}
         <div className="mt-4 text-center text-sm text-gray-500">
           Showing {startIndex + 1}-{Math.min(endIndex, allCourses.length)} of {allCourses.length} courses
         </div>

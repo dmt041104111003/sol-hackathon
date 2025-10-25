@@ -46,17 +46,13 @@ export default function EducatorDashboard() {
     options: ['', '', '', ''],
     correctAnswer: 0
   });
-  const [educatorWalletAddress, setEducatorWalletAddress] = useState<string>('');
-
-  // Load courses from database
+  const [educatorWalletAddress, setEducatorWalletAddress] = useState<string>('');
   useEffect(() => {
     if (session) {
       loadCourses();
       loadEducatorProfile();
     }
-  }, [session]);
-
-  // Update wallet address when wallet connects
+  }, [session]);
   useEffect(() => {
     if (connected && publicKey) {
       setEducatorWalletAddress(publicKey.toString());
@@ -72,7 +68,6 @@ export default function EducatorDashboard() {
         setCourses(data.courses);
       }
     } catch (error) {
-      console.error('Error loading courses:', error);
     } finally {
       setLoading(false);
     }
@@ -88,7 +83,6 @@ export default function EducatorDashboard() {
         }
       }
     } catch (error) {
-      console.error('Error loading educator profile:', error);
     }
   };
 
@@ -117,7 +111,6 @@ export default function EducatorDashboard() {
         alert(`Failed to update wallet: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error updating wallet:', error);
       alert('Failed to update wallet address');
     }
   };
@@ -145,7 +138,6 @@ export default function EducatorDashboard() {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Course saved successfully:', result);
         alert('Course saved successfully!');
         setShowCreateCourse(false);
         setCourseData({ title: '', videoLink: '', description: '', priceUSD: 0 });
@@ -155,11 +147,9 @@ export default function EducatorDashboard() {
         loadCourses(); // Reload courses
       } else {
         const error = await response.json();
-        console.error('Failed to save course:', error);
         alert(`Failed to save course: ${error.error || error.details || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error saving course:', error);
       alert('Failed to save course');
     }
   };
@@ -198,7 +188,6 @@ export default function EducatorDashboard() {
         alert('Failed to delete course');
       }
     } catch (error) {
-      console.error('Error deleting course:', error);
       alert('Failed to delete course');
     }
   };
@@ -207,9 +196,42 @@ export default function EducatorDashboard() {
     setSelectedCourse(course);
   };
 
-  const handleMintNFT = (studentId: string, courseTitle: string) => {
-    // TODO: Implement NFT minting logic
-    alert(`Mint NFT for Student ID: ${studentId}\nCourse: ${courseTitle}\n\nThis feature will be implemented later.`);
+  const handleMintNFT = async (studentId: string, courseTitle: string) => {
+    if (!connected || !publicKey) {
+      alert('Please connect your wallet first to mint certificates');
+      return;
+    }
+
+    if (!confirm(`Mint certificate for student ${studentId}?\nCourse: ${courseTitle}\n\nThis will create a blockchain certificate.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/mint/certificate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentId: studentId,
+          courseId: selectedCourse?.id,
+          credentialType: 'Certificate',
+          metadataUri: `https://api.example.com/certificates/${studentId}_${selectedCourse?.id}`
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Certificate minted successfully!\n\nCertificate ID: ${result.certificateId}\nTransaction: ${result.transaction}\n\nCertificate is now on the blockchain.`);
+        setSelectedCourse(null);
+        loadCourses();
+      } else {
+        const error = await response.json();
+        alert(`Failed to mint certificate: ${error.error || error.details || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert('Failed to mint certificate. Please try again.');
+    }
   };
 
   const getCompletedStudents = (course: Course) => {
@@ -230,23 +252,17 @@ export default function EducatorDashboard() {
 
   const handleJsonImport = () => {
     try {
-      const jsonData = JSON.parse(jsonInput);
-      
-      // Validate required fields
+      const jsonData = JSON.parse(jsonInput);
       if (!jsonData.courseTitle || !jsonData.youtubeLink || !jsonData.description) {
         alert('Missing required fields: courseTitle, youtubeLink, description');
         return;
-      }
-
-      // Set course data from JSON
+      }
       setCourseData({
         title: jsonData.courseTitle,
         videoLink: jsonData.youtubeLink,
         description: jsonData.description,
         priceUSD: jsonData.priceUSD || 0
-      });
-
-      // Set quiz questions from JSON
+      });
       if (jsonData.quizQuestions && Array.isArray(jsonData.quizQuestions)) {
         const questions = jsonData.quizQuestions.map((q: any, index: number) => ({
           id: `imported-${index}`,
@@ -259,15 +275,14 @@ export default function EducatorDashboard() {
 
       setShowJsonImport(false);
       setJsonInput('');
-      setShowCreateCourse(true); // Open create course form
-      setActiveTab('overview'); // Switch to overview tab
+      setShowCreateCourse(true);
+      setActiveTab('overview');
       alert('Course data imported successfully! Review and save the course.');
     } catch (error) {
       alert('Invalid JSON format. Please check your input.');
     }
   };
 
-  // Simple check - if no session, show message
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -299,7 +314,7 @@ export default function EducatorDashboard() {
           </p>
         </div>
 
-        {/* Tab Navigation */}
+        {}
         <div className="mb-6">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
@@ -333,7 +348,7 @@ export default function EducatorDashboard() {
           </div>
         </div>
 
-        {/* Students Modal */}
+        {}
         {selectedCourse && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
@@ -348,10 +363,10 @@ export default function EducatorDashboard() {
                   ✕
                 </button>
               </div>
-              
+
               {selectedCourse.enrollments.length > 0 ? (
                 <div className="space-y-4">
-                  {/* Completed Students */}
+                  {}
                   {getCompletedStudents(selectedCourse).length > 0 && (
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">
@@ -381,7 +396,7 @@ export default function EducatorDashboard() {
                     </div>
                   )}
 
-                  {/* Active Students */}
+                  {}
                   {getActiveStudents(selectedCourse).length > 0 && (
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">
@@ -403,11 +418,11 @@ export default function EducatorDashboard() {
                     </div>
                   )}
 
-                  {/* Summary */}
+                  {}
                   <div className="mt-4 p-3 bg-gray-50 rounded">
                     <p className="text-sm text-gray-600">
-                      Total: {selectedCourse.enrollments.length} students | 
-                      Completed: {getCompletedStudents(selectedCourse).length} | 
+                      Total: {selectedCourse.enrollments.length} students |
+                      Completed: {getCompletedStudents(selectedCourse).length} |
                       Active: {getActiveStudents(selectedCourse).length}
                     </p>
                   </div>
@@ -419,7 +434,7 @@ export default function EducatorDashboard() {
           </div>
         )}
 
-        {/* JSON Import Modal */}
+        {}
         {showJsonImport && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -488,7 +503,7 @@ export default function EducatorDashboard() {
           <>
             {activeTab === 'overview' ? (
               <div className="space-y-6">
-                {/* Stats */}
+                {}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="bg-white border border-gray-300 rounded p-4">
                     <h3 className="text-sm font-medium text-gray-900">My Courses</h3>
@@ -514,7 +529,7 @@ export default function EducatorDashboard() {
                   </div>
                 </div>
 
-                {/* Wallet Information */}
+                {}
                 <div className="bg-white border border-gray-300 rounded p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Wallet</h3>
                   <div className="space-y-4">
@@ -539,7 +554,7 @@ export default function EducatorDashboard() {
                         </button>
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
-                        {connected 
+                        {connected
                           ? 'Wallet connected. Click "Update Wallet" to save your address for payments.'
                           : 'Connect your wallet to receive payments from students.'
                         }
@@ -548,7 +563,7 @@ export default function EducatorDashboard() {
                   </div>
                 </div>
 
-                {/* Create Course Button */}
+                {}
                 <div className="bg-white border border-gray-300 rounded p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Course Management</h3>
                   <div className="flex space-x-3">
@@ -569,7 +584,7 @@ export default function EducatorDashboard() {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Courses List */}
+                {}
                 {loading ? (
                   <div className="text-center py-8">
                     <div className="text-gray-600">Loading courses...</div>
@@ -631,8 +646,8 @@ export default function EducatorDashboard() {
         ) : (
           <div className="bg-white border border-gray-300 rounded p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-6">Create New Course</h2>
-            
-            {/* Course Information */}
+
+            {}
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -646,7 +661,7 @@ export default function EducatorDashboard() {
                   placeholder="Enter course title"
                 />
               </div>
-              
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       YouTube Video Link
@@ -662,7 +677,7 @@ export default function EducatorDashboard() {
                       Paste the full YouTube URL here
                     </p>
                   </div>
-              
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Description
@@ -695,11 +710,11 @@ export default function EducatorDashboard() {
                   </div>
             </div>
 
-            {/* Quiz Questions */}
+            {}
             <div className="mb-6">
               <h3 className="text-md font-medium text-gray-900 mb-4">Quiz Questions</h3>
-              
-              {/* Add New Question */}
+
+              {}
               <div className="border border-gray-300 rounded p-4 mb-4">
                 <div className="mb-3">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -713,7 +728,7 @@ export default function EducatorDashboard() {
                     placeholder="Enter question"
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {currentQuestion.options.map((option, index) => (
                     <input
@@ -730,7 +745,7 @@ export default function EducatorDashboard() {
                     />
                   ))}
                 </div>
-                
+
                 <div className="mb-3">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Correct Answer
@@ -747,7 +762,7 @@ export default function EducatorDashboard() {
                     <option value={3}>Option 4</option>
                   </select>
                 </div>
-                
+
                 <button
                   onClick={addQuizQuestion}
                   className="bg-gray-800 text-white px-3 py-1 text-sm"
@@ -756,7 +771,7 @@ export default function EducatorDashboard() {
                 </button>
               </div>
 
-              {/* Existing Questions */}
+              {}
               {quizQuestions.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-gray-700">Added Questions:</h4>
@@ -770,7 +785,7 @@ export default function EducatorDashboard() {
               )}
             </div>
 
-            {/* Save Course */}
+            {}
             <div className="flex space-x-3">
               <button
                 onClick={handleSaveCourse}

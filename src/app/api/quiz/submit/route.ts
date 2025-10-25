@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -16,9 +16,7 @@ export async function POST(request: NextRequest) {
 
     if (!courseId || !answers) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    // Get quiz questions for the course
+    }
     const quizQuestions = await (prisma as any).quizQuestion.findMany({
       where: { courseId },
       select: {
@@ -29,9 +27,7 @@ export async function POST(request: NextRequest) {
 
     if (quizQuestions.length === 0) {
       return NextResponse.json({ error: 'No quiz questions found for this course' }, { status: 404 });
-    }
-
-    // Calculate score
+    }
     let correctAnswers = 0;
     quizQuestions.forEach((question: any) => {
       if (answers[question.id] === question.correctAnswer) {
@@ -41,11 +37,9 @@ export async function POST(request: NextRequest) {
 
     const score = correctAnswers;
     const totalQuestions = quizQuestions.length;
-    const percentage = Math.round((score / totalQuestions) * 100);
-
-    // Save quiz result to enrollment
+    const percentage = Math.round((score / totalQuestions) * 100);
     const isPerfectScore = score === totalQuestions;
-    
+
     await (prisma as any).enrollment.updateMany({
       where: {
         userId: session.user.id,
@@ -68,7 +62,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error submitting quiz:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

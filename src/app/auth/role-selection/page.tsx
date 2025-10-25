@@ -10,14 +10,11 @@ export default function RoleSelection() {
   const { data: session, status } = useSession();
   const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'EDUCATOR' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-
-  // Kiểm tra nếu đã có role thì redirect
+  const router = useRouter();
   useEffect(() => {
     if (status === 'loading') return;
-    
-    if (session?.user?.role) {
-      // Đã có role, redirect đến dashboard tương ứng
+
+    if (session?.user?.role) {
       if (session.user.role === 'STUDENT') {
         router.push('/dashboard/student');
       } else if (session.user.role === 'EDUCATOR') {
@@ -40,8 +37,7 @@ export default function RoleSelection() {
         redirect: false
       });
 
-      if (result?.ok) {
-        // Redirect based on role
+      if (result?.ok) {
         if (role === 'STUDENT') {
           router.push('/dashboard/student');
         } else {
@@ -51,14 +47,11 @@ export default function RoleSelection() {
         alert('Authentication failed');
       }
     } catch (error) {
-      console.error('Authentication error:', error);
       alert('Authentication failed');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Loading state
+  };
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -68,9 +61,7 @@ export default function RoleSelection() {
         </div>
       </div>
     );
-  }
-
-  // Đã có role, đang redirect
+  }
   if (session?.user?.role) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -112,7 +103,7 @@ export default function RoleSelection() {
         </div>
 
         <div className="space-y-4">
-          {/* Student Option */}
+          {}
           <button
             onClick={() => handleRoleSelection('STUDENT')}
             disabled={isLoading}
@@ -126,7 +117,7 @@ export default function RoleSelection() {
             </div>
           </button>
 
-          {/* Educator Option */}
+          {}
           <button
             onClick={() => handleRoleSelection('EDUCATOR')}
             disabled={isLoading}

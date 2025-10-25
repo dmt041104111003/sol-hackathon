@@ -23,17 +23,14 @@ export function StatsSection({ lmsData }: VerificationSectionProps) {
     }
 
     setIsGenerating(true);
-    
-    try {
-      // Create QR code data with transaction hash
+
+    try {
       const qrData = {
         type: 'blockchain_verification',
         txHash: txHash,
         timestamp: new Date().toISOString(),
         platform: 'APEC LMS'
-      };
-
-      // Generate QR code
+      };
       const qrCodeDataURL = await QRCode.toDataURL(JSON.stringify(qrData), {
         width: 256,
         margin: 2,
@@ -45,7 +42,6 @@ export function StatsSection({ lmsData }: VerificationSectionProps) {
 
       setQrCodeUrl(qrCodeDataURL);
     } catch (error) {
-      console.error('QR Code generation failed:', error);
       alert('Failed to generate QR code. Please try again.');
     } finally {
       setIsGenerating(false);
@@ -59,12 +55,9 @@ export function StatsSection({ lmsData }: VerificationSectionProps) {
     }
 
     setIsVerifying(true);
-    
-    try {
-      // Simulate verification process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock verification result
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
       const result = {
         valid: true,
         txHash: verifyHash,
@@ -74,10 +67,9 @@ export function StatsSection({ lmsData }: VerificationSectionProps) {
         student: 'John Doe',
         status: 'Verified'
       };
-      
+
       setVerificationResult(result);
     } catch (error) {
-      console.error('Verification failed:', error);
       setVerificationResult({
         valid: false,
         error: 'Transaction not found or invalid'
@@ -99,7 +91,7 @@ export function StatsSection({ lmsData }: VerificationSectionProps) {
           </p>
         </div>
 
-        {/* Tab Navigation */}
+        {}
         <div className="flex justify-center mb-8">
           <div className="border border-gray-300 rounded">
             <button
@@ -126,7 +118,7 @@ export function StatsSection({ lmsData }: VerificationSectionProps) {
         </div>
 
         <div className="bg-gray-50 rounded-lg p-8">
-          {/* Generate QR Tab */}
+          {}
           {activeTab === 'generate' && (
             <>
               <div className="mb-6">
@@ -166,7 +158,7 @@ export function StatsSection({ lmsData }: VerificationSectionProps) {
             </>
           )}
 
-          {/* Verify Hash Tab */}
+          {}
           {activeTab === 'verify' && (
             <>
               <div className="mb-6">

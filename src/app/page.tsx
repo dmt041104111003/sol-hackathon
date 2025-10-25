@@ -36,7 +36,6 @@ export default function Home() {
         setLmsData(result.data as unknown as LMSAccount);
       }
     } catch (error) {
-      console.error('Error loading LMS data:', error);
       toast.error('Failed to load LMS data');
     } finally {
       setLoading(false);

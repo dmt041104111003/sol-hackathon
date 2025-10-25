@@ -6,17 +6,13 @@ import { authOptions } from '@/lib/auth';
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is an educator
+    }
     if (session.user.role !== 'EDUCATOR') {
       return NextResponse.json({ error: 'Only educators can access this endpoint' }, { status: 403 });
-    }
-
-    // Get educator profile
+    }
     const user = await prisma.user.findUnique({
       where: { id: session.user.id }
     });
@@ -34,7 +30,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching educator profile:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -42,12 +37,10 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is an educator
+    }
     if (session.user.role !== 'EDUCATOR') {
       return NextResponse.json({ error: 'Only educators can access this endpoint' }, { status: 403 });
     }
@@ -57,9 +50,7 @@ export async function PUT(request: NextRequest) {
 
     if (!walletAddress) {
       return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
-    }
-
-    // Update educator wallet address
+    }
     const updatedUser = await (prisma as any).user.update({
       where: { id: session.user.id },
       data: { walletAddress }
@@ -77,7 +68,6 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error updating educator profile:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

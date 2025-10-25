@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -16,9 +16,7 @@ export async function POST(request: NextRequest) {
 
     if (!courseId) {
       return NextResponse.json({ error: 'Course ID is required' }, { status: 400 });
-    }
-
-    // Reset quiz data in enrollment
+    }
     const enrollment = await (prisma as any).enrollment.updateMany({
       where: {
         userId: session.user.id,
@@ -46,7 +44,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error resetting quiz:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

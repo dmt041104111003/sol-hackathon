@@ -44,48 +44,31 @@ export default function StudentDashboard() {
   const loadEnrolledCourses = async () => {
     try {
       setLoading(true);
-      console.log('Loading enrolled courses...');
       const response = await fetch('/api/student/courses');
-      console.log('Response status:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('Courses data:', data);
-        const allCourses = data.courses;
-        console.log('All courses:', allCourses);
-        
-        // Separate active and completed courses based on quiz score
+        const allCourses = data.courses;
         const activeCourses = allCourses.filter((course: any) => {
           const enrollment = course.enrollments?.[0];
-          if (!enrollment) return false;
-          
-          // Course is active if no quiz score or score < 100%
+          if (!enrollment) return false;
           const totalQuestions = course.quizQuestions?.length || 0;
           const quizScore = enrollment.quizScore || 0;
           return quizScore < totalQuestions;
         });
-        
+
         const completedCourses = allCourses.filter((course: any) => {
           const enrollment = course.enrollments?.[0];
-          if (!enrollment) return false;
-          
-          // Course is completed if quiz score = 100%
+          if (!enrollment) return false;
           const totalQuestions = course.quizQuestions?.length || 0;
           const quizScore = enrollment.quizScore || 0;
           return totalQuestions > 0 && quizScore === totalQuestions;
         });
-        
-        console.log('Active courses:', activeCourses);
-        console.log('Completed courses:', completedCourses);
-        
         setEnrolledCourses(activeCourses);
         setCompletedCourses(completedCourses);
       } else {
         const error = await response.json();
-        console.error('API Error:', error);
       }
     } catch (error) {
-      console.error('Error loading courses:', error);
     } finally {
       setLoading(false);
     }
@@ -99,9 +82,7 @@ export default function StudentDashboard() {
   };
 
   const submitQuiz = async () => {
-    if (!selectedCourse) return;
-
-    // Check if all questions are answered
+    if (!selectedCourse) return;
     const unansweredQuestions = selectedCourse.quizQuestions.filter(
       question => quizAnswers[question.id] === undefined
     );
@@ -127,27 +108,21 @@ export default function StudentDashboard() {
       if (response.ok) {
         const result = await response.json();
         setQuizScore(result.score);
-        setQuizSubmitted(true);
-        
-        // Course completion is now handled in quiz/submit API
-        // No need to call enrollment/complete separately
+        setQuizSubmitted(true);
 
         const percentage = Math.round((result.score / selectedCourse.quizQuestions.length) * 100);
-        
+
         if (result.score === selectedCourse.quizQuestions.length) {
           alert(`Perfect! Quiz completed with 100% score: ${result.score}/${selectedCourse.quizQuestions.length} (${percentage}%)`);
         } else {
           alert(`Quiz submitted! Your score: ${result.score}/${selectedCourse.quizQuestions.length} (${percentage}%). You need 100% to complete this course.`);
-        }
-        
-        // Reload courses to update the lists
+        }
         await loadEnrolledCourses();
       } else {
         const error = await response.json();
         alert(`Quiz submission failed: ${error.error}`);
       }
     } catch (error) {
-      console.error('Error submitting quiz:', error);
       alert('Failed to submit quiz. Please try again.');
     } finally {
       setSubmittingQuiz(false);
@@ -156,12 +131,10 @@ export default function StudentDashboard() {
 
   const handleViewCourse = (course: Course) => {
     setSelectedCourse(course);
-    
-    // Check if course is completed - don't reset quiz state for completed courses
+
     const isCompleted = (course as any).enrollments?.some((enrollment: any) => enrollment.status === 'COMPLETED');
-    
+
     if (!isCompleted) {
-      // Only reset quiz state for active courses
       setQuizAnswers({});
       setQuizScore(null);
       setQuizSubmitted(false);
@@ -171,22 +144,19 @@ export default function StudentDashboard() {
 
   const handleRetakeQuiz = async () => {
     try {
-      // Check if course has quiz score before resetting
       const enrollment = (selectedCourse as any).enrollments?.[0];
       const totalQuestions = selectedCourse?.quizQuestions?.length || 0;
       const quizScore = enrollment?.quizScore || 0;
-      
+
       if (totalQuestions === 0) {
         alert('This course has no quiz questions.');
         return;
       }
-      
+
       if (quizScore === 0) {
         alert('You haven\'t taken this quiz yet.');
         return;
       }
-      
-      // Call API to reset quiz data in database
       const response = await fetch('/api/quiz/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -194,41 +164,35 @@ export default function StudentDashboard() {
       });
 
       if (response.ok) {
-        // Reset UI state
         setQuizAnswers({});
         setQuizScore(null);
         setQuizSubmitted(false);
         setSubmittingQuiz(false);
-        
-        // Reload courses to update the lists
+
         await loadEnrolledCourses();
-        
+
         alert('Quiz reset successfully! You can now retake the quiz.');
       } else {
         const error = await response.json();
         alert(`Failed to reset quiz: ${error.error}`);
       }
     } catch (error) {
-      console.error('Error resetting quiz:', error);
       alert('Failed to reset quiz. Please try again.');
     }
   };
 
   const getYouTubeEmbedUrl = (url: string) => {
     if (!url) return '';
-    
-    // Extract video ID from various YouTube URL formats
+
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
-    
+
     if (match && match[2].length === 11) {
       return `https://www.youtube.com/embed/${match[2]}`;
     }
-    
-    return url; // Return original URL if not a valid YouTube URL
-  };
 
-  // Simple auth - no complex checks
+    return url; // Return original URL if not a valid YouTube URL
+  };
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -260,7 +224,7 @@ export default function StudentDashboard() {
           </p>
         </div>
 
-        {/* Tab Navigation */}
+        {}
         <div className="mb-6">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
@@ -298,7 +262,7 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Course Detail Modal */}
+        {}
         {selectedCourse && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -314,7 +278,7 @@ export default function StudentDashboard() {
                 </button>
               </div>
 
-              {/* Course Tab Navigation */}
+              {}
               <div className="mb-4">
                 <div className="border-b border-gray-200">
                   <nav className="-mb-px flex space-x-8">
@@ -342,7 +306,7 @@ export default function StudentDashboard() {
                 </div>
               </div>
 
-              {/* Course Content */}
+              {}
               {activeCourseTab === 'video' ? (
                 <div>
                   {selectedCourse.videoLink ? (
@@ -370,30 +334,24 @@ export default function StudentDashboard() {
                 <div>
                   {selectedCourse.quizQuestions.length > 0 ? (
                     <div className="space-y-4">
-                      {/* Check if course is completed based on quiz score */}
+                      {}
                       {(() => {
                         const enrollment = (selectedCourse as any).enrollments?.[0];
                         const totalQuestions = selectedCourse.quizQuestions?.length || 0;
                         const quizScore = enrollment?.quizScore || 0;
                         const isCompleted = totalQuestions > 0 && quizScore === totalQuestions;
                         const shouldShowQuiz = !isCompleted && !quizSubmitted;
-                        
-                        if (isCompleted || quizSubmitted) {
-                          // Get quiz data from enrollment
+
+                        if (isCompleted || quizSubmitted) {
                           const enrollment = (selectedCourse as any).enrollments?.[0];
                           const dbQuizScore = enrollment?.quizScore || 0;
                           const dbQuizAnswers = enrollment?.quizAnswers;
-                          
-                          console.log('Enrollment data:', enrollment);
-                          console.log('DB Quiz Score:', dbQuizScore);
-                          console.log('DB Quiz Answers:', dbQuizAnswers);
-                          
                           return (
                             <div className="py-8">
                               <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
                                 <h3 className="text-lg font-medium text-gray-900 mb-2">Quiz Results</h3>
                                 <p className="text-gray-700 mb-4">
-                                  Your score: {dbQuizScore || quizScore}/{selectedCourse.quizQuestions.length} 
+                                  Your score: {dbQuizScore || quizScore}/{selectedCourse.quizQuestions.length}
                                   ({Math.round(((dbQuizScore || quizScore || 0) / selectedCourse.quizQuestions.length) * 100)}%)
                                 </p>
                                 {(() => {
@@ -401,14 +359,14 @@ export default function StudentDashboard() {
                                   const totalQuestions = selectedCourse.quizQuestions.length;
                                   const isPerfect = currentScore === totalQuestions;
                                   const hasScore = currentScore > 0;
-                                  
+
                                   if (isPerfect) {
                                     return (
                                       <div className="flex items-center justify-between">
                                         <p className="text-sm text-green-600 font-medium">
                                           Perfect! You have completed this course with 100% score!
                                         </p>
-                                        {/* No retake button for perfect score */}
+                                        {}
                                       </div>
                                     );
                                   } else if (hasScore) {
@@ -434,15 +392,14 @@ export default function StudentDashboard() {
                                   }
                                 })()}
                               </div>
-                              
-                              {/* Quiz Results - show if we have quiz data */}
+
+                              {}
                               {(quizSubmitted && quizScore !== null) || (isCompleted && dbQuizAnswers) ? (
                                 <div className="space-y-4">
                                   <h4 className="font-medium text-gray-900">Quiz Results:</h4>
-                                  {selectedCourse.quizQuestions.map((question, index) => {
-                                    // Use current session answers or database answers
+                                  {selectedCourse.quizQuestions.map((question, index) => {
                                     const currentAnswers = quizSubmitted ? quizAnswers : dbQuizAnswers;
-                                    
+
                                     return (
                                       <div key={question.id} className="border border-gray-200 rounded p-4">
                                         <h5 className="font-medium text-gray-900 mb-2">
@@ -453,10 +410,10 @@ export default function StudentDashboard() {
                                             const isSelected = currentAnswers?.[question.id] === optionIndex;
                                             const isCorrect = optionIndex === question.correctAnswer;
                                             const isWrong = isSelected && !isCorrect;
-                                            
+
                                             return (
-                                              <div 
-                                                key={optionIndex} 
+                                              <div
+                                                key={optionIndex}
                                                 className={`p-2 rounded ${
                                                   isCorrect ? 'bg-green-50 border border-green-200' :
                                                   isWrong ? 'bg-red-50 border border-red-200' :
@@ -483,9 +440,7 @@ export default function StudentDashboard() {
                               ) : null}
                             </div>
                           );
-                        }
-                        
-                        // Show quiz form if not completed and not submitted
+                        }
                         if (shouldShowQuiz) {
                           return (
                             <>
@@ -512,7 +467,7 @@ export default function StudentDashboard() {
                                 </div>
                               ))}
                               <div className="mt-6">
-                                <button 
+                                <button
                                   onClick={submitQuiz}
                                   disabled={submittingQuiz}
                                   className="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed"
@@ -523,7 +478,7 @@ export default function StudentDashboard() {
                             </>
                           );
                         }
-                        
+
                         return null;
                       })()}
                     </div>
@@ -538,7 +493,7 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        {/* Main Content */}
+        {}
         {activeTab === 'courses' ? (
           <div className="space-y-6">
             {loading ? (

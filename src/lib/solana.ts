@@ -14,7 +14,7 @@ export class SolanaService {
       process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com',
       'confirmed'
     );
-    
+
     const keypair = Keypair.generate();
     const wallet = {
       publicKey: keypair.publicKey,
@@ -51,7 +51,6 @@ export class SolanaService {
 
       return { success: true, tx, lmsAccount: lmsAccount.toString() };
     } catch (error) {
-      console.error('Error initializing LMS:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -86,7 +85,6 @@ export class SolanaService {
 
       return { success: true, tx, courseAccount: courseAccount.toString() };
     } catch (error) {
-      console.error('Error creating course:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -121,7 +119,6 @@ export class SolanaService {
 
       return { success: true, tx, enrollmentAccount: enrollmentAccount.toString() };
     } catch (error) {
-      console.error('Error enrolling student:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -157,7 +154,6 @@ export class SolanaService {
 
       return { success: true, tx, certificateAccount: certificateAccount.toString() };
     } catch (error) {
-      console.error('Error issuing certificate:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -183,7 +179,6 @@ export class SolanaService {
 
       return { success: true, tx, achievementAccount: achievementAccount.toString() };
     } catch (error) {
-      console.error('Error awarding tokens:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -205,7 +200,6 @@ export class SolanaService {
 
       return { success: true, tx };
     } catch (error) {
-      console.error('Error updating progress:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -220,7 +214,6 @@ export class SolanaService {
       const account = await this.program.account.lmsAccount.fetch(lmsAccount);
       return { success: true, data: account };
     } catch (error) {
-      console.error('Error fetching LMS account:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -235,7 +228,6 @@ export class SolanaService {
       const account = await this.program.account.course.fetch(courseAccount);
       return { success: true, data: account };
     } catch (error) {
-      console.error('Error fetching course:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -250,7 +242,6 @@ export class SolanaService {
       const account = await this.program.account.enrollment.fetch(enrollmentAccount);
       return { success: true, data: account };
     } catch (error) {
-      console.error('Error fetching enrollment:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -265,7 +256,6 @@ export class SolanaService {
       const account = await this.program.account.certificate.fetch(certificateAccount);
       return { success: true, data: account };
     } catch (error) {
-      console.error('Error fetching certificate:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
