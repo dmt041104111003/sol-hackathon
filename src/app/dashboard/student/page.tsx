@@ -29,6 +29,10 @@ export default function StudentDashboard() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [activeCourseTab, setActiveCourseTab] = useState<'video' | 'quiz'>('video');
   const [loading, setLoading] = useState(true);
+  const [quizAnswers, setQuizAnswers] = useState<{[key: string]: number}>({});
+  const [quizScore, setQuizScore] = useState<number | null>(null);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [submittingQuiz, setSubmittingQuiz] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -48,6 +52,68 @@ export default function StudentDashboard() {
       console.error('Error loading courses:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleQuizAnswerChange = (questionId: string, answerIndex: number) => {
+    setQuizAnswers(prev => ({
+      ...prev,
+      [questionId]: answerIndex
+    }));
+  };
+
+  const submitQuiz = async () => {
+    if (!selectedCourse) return;
+
+    // Check if all questions are answered
+    const unansweredQuestions = selectedCourse.quizQuestions.filter(
+      question => quizAnswers[question.id] === undefined
+    );
+
+    if (unansweredQuestions.length > 0) {
+      alert('Please answer all questions before submitting.');
+      return;
+    }
+
+    setSubmittingQuiz(true);
+    try {
+      const response = await fetch('/api/quiz/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          courseId: selectedCourse.id,
+          answers: quizAnswers
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setQuizScore(result.score);
+        setQuizSubmitted(true);
+        
+        // Update enrollment status to COMPLETED
+        await fetch('/api/enrollment/complete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            courseId: selectedCourse.id
+          }),
+        });
+
+        alert(`Quiz submitted! Your score: ${result.score}/${selectedCourse.quizQuestions.length} (${Math.round((result.score / selectedCourse.quizQuestions.length) * 100)}%)`);
+      } else {
+        const error = await response.json();
+        alert(`Quiz submission failed: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      alert('Failed to submit quiz. Please try again.');
+    } finally {
+      setSubmittingQuiz(false);
     }
   };
 
@@ -74,7 +140,7 @@ export default function StudentDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-600 mx-auto"></div>
           <div className="mt-4 text-lg">Loading...</div>
         </div>
       </div>
@@ -201,31 +267,54 @@ export default function StudentDashboard() {
                 <div>
                   {selectedCourse.quizQuestions.length > 0 ? (
                     <div className="space-y-4">
-                      {selectedCourse.quizQuestions.map((question, index) => (
-                        <div key={question.id} className="border border-gray-200 rounded p-4">
-                          <h4 className="font-medium text-gray-900 mb-3">
-                            Question {index + 1}: {question.question}
-                          </h4>
-                          <div className="space-y-2">
-                            {question.options.map((option, optionIndex) => (
-                              <label key={optionIndex} className="flex items-center">
-                                <input
-                                  type="radio"
-                                  name={`question-${question.id}`}
-                                  value={optionIndex}
-                                  className="mr-2"
-                                />
-                                <span className="text-gray-700">{option}</span>
-                              </label>
-                            ))}
+                      {!quizSubmitted ? (
+                        <>
+                          {selectedCourse.quizQuestions.map((question, index) => (
+                            <div key={question.id} className="border border-gray-200 rounded p-4">
+                              <h4 className="font-medium text-gray-900 mb-3">
+                                Question {index + 1}: {question.question}
+                              </h4>
+                              <div className="space-y-2">
+                                {question.options.map((option, optionIndex) => (
+                                  <label key={optionIndex} className="flex items-center">
+                                    <input
+                                      type="radio"
+                                      name={`question-${question.id}`}
+                                      value={optionIndex}
+                                      checked={quizAnswers[question.id] === optionIndex}
+                                      onChange={() => handleQuizAnswerChange(question.id, optionIndex)}
+                                      className="mr-2"
+                                    />
+                                    <span className="text-gray-700">{option}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                          <div className="mt-6">
+                            <button 
+                              onClick={submitQuiz}
+                              disabled={submittingQuiz}
+                              className="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                              {submittingQuiz ? 'Submitting...' : 'Submit Quiz'}
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">Quiz Completed!</h3>
+                            <p className="text-gray-700 mb-4">
+                              Your score: {quizScore}/{selectedCourse.quizQuestions.length} 
+                              ({Math.round((quizScore! / selectedCourse.quizQuestions.length) * 100)}%)
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Congratulations! You have completed this course.
+                            </p>
                           </div>
                         </div>
-                      ))}
-                      <div className="mt-6">
-                        <button className="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-900">
-                          Submit Quiz
-                        </button>
-                      </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-8">
@@ -265,7 +354,7 @@ export default function StudentDashboard() {
                           >
                             View Course
                           </button>
-                          <span className="bg-green-100 text-green-800 px-2 py-1 text-xs rounded">
+                          <span className="bg-gray-100 text-gray-800 px-2 py-1 text-xs rounded">
                             Enrolled
                           </span>
                         </div>

@@ -207,6 +207,14 @@ export default function EducatorDashboard() {
     setSelectedCourse(course);
   };
 
+  const getCompletedStudents = (course: Course) => {
+    return course.enrollments.filter(enrollment => enrollment.status === 'COMPLETED');
+  };
+
+  const getActiveStudents = (course: Course) => {
+    return course.enrollments.filter(enrollment => enrollment.status === 'ACTIVE');
+  };
+
   const handleJsonImport = () => {
     try {
       const jsonData = JSON.parse(jsonInput);
@@ -251,7 +259,7 @@ export default function EducatorDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-600 mx-auto"></div>
           <div className="mt-4 text-lg">Loading...</div>
         </div>
       </div>
@@ -329,18 +337,59 @@ export default function EducatorDashboard() {
               </div>
               
               {selectedCourse.enrollments.length > 0 ? (
-                <div className="space-y-2">
-                  {selectedCourse.enrollments.map((enrollment, index) => (
-                    <div key={enrollment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                      <div>
-                        <p className="font-medium text-gray-900">Student #{index + 1}</p>
-                        <p className="text-sm text-gray-600">
-                          Enrolled: {new Date(enrollment.enrolledAt).toLocaleDateString()}
-                        </p>
+                <div className="space-y-4">
+                  {/* Completed Students */}
+                  {getCompletedStudents(selectedCourse).length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Completed Students ({getCompletedStudents(selectedCourse).length})
+                      </h4>
+                      <div className="space-y-2">
+                        {getCompletedStudents(selectedCourse).map((enrollment, index) => (
+                          <div key={enrollment.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded">
+                            <div>
+                              <p className="font-medium text-gray-900">Student #{index + 1} (Completed)</p>
+                              <p className="text-sm text-gray-600">
+                                Completed: {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <span className="text-sm text-gray-500">ID: {enrollment.userId}</span>
+                          </div>
+                        ))}
                       </div>
-                      <span className="text-sm text-gray-500">ID: {enrollment.userId}</span>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Active Students */}
+                  {getActiveStudents(selectedCourse).length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Active Students ({getActiveStudents(selectedCourse).length})
+                      </h4>
+                      <div className="space-y-2">
+                        {getActiveStudents(selectedCourse).map((enrollment, index) => (
+                          <div key={enrollment.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded">
+                            <div>
+                              <p className="font-medium text-gray-900">Student #{index + 1}</p>
+                              <p className="text-sm text-gray-600">
+                                Enrolled: {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <span className="text-sm text-gray-500">ID: {enrollment.userId}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Summary */}
+                  <div className="mt-4 p-3 bg-gray-50 rounded">
+                    <p className="text-sm text-gray-600">
+                      Total: {selectedCourse.enrollments.length} students | 
+                      Completed: {getCompletedStudents(selectedCourse).length} | 
+                      Active: {getActiveStudents(selectedCourse).length}
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <p className="text-gray-600 text-center py-4">No students enrolled yet</p>
@@ -399,7 +448,7 @@ export default function EducatorDashboard() {
               <div className="flex space-x-3">
                 <button
                   onClick={handleJsonImport}
-                  className="bg-blue-600 text-white px-4 py-2 text-sm rounded"
+                  className="bg-gray-800 text-white px-4 py-2 text-sm rounded"
                 >
                   Import Course
                 </button>
@@ -419,7 +468,7 @@ export default function EducatorDashboard() {
             {activeTab === 'overview' ? (
               <div className="space-y-6">
                 {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="bg-white border border-gray-300 rounded p-4">
                     <h3 className="text-sm font-medium text-gray-900">My Courses</h3>
                     <p className="text-2xl font-bold text-gray-900">{courses.length}</p>
@@ -428,6 +477,12 @@ export default function EducatorDashboard() {
                     <h3 className="text-sm font-medium text-gray-900">Total Students</h3>
                     <p className="text-2xl font-bold text-gray-900">
                       {courses.reduce((total, course) => total + course.enrollments.length, 0)}
+                    </p>
+                  </div>
+                  <div className="bg-white border border-gray-300 rounded p-4">
+                    <h3 className="text-sm font-medium text-gray-900">Completed Students</h3>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {courses.reduce((total, course) => total + getCompletedStudents(course).length, 0)}
                     </p>
                   </div>
                   <div className="bg-white border border-gray-300 rounded p-4">
@@ -457,7 +512,7 @@ export default function EducatorDashboard() {
                         <button
                           onClick={updateEducatorWallet}
                           disabled={!connected}
-                          className="bg-blue-600 text-white px-4 py-2 text-sm rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          className="bg-gray-800 text-white px-4 py-2 text-sm rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
                           {connected ? 'Update Wallet' : 'Connect Wallet'}
                         </button>
@@ -484,7 +539,7 @@ export default function EducatorDashboard() {
                     </button>
                     <button
                       onClick={() => setShowJsonImport(true)}
-                      className="bg-blue-600 text-white px-4 py-2 text-sm"
+                      className="bg-gray-800 text-white px-4 py-2 text-sm"
                     >
                       Import from JSON
                     </button>
@@ -521,20 +576,20 @@ export default function EducatorDashboard() {
                                   href={course.videoLink}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 text-sm"
+                                  className="text-gray-600 hover:text-gray-800 text-sm"
                                 >
                                   YouTube Link
                                 </a>
                               )}
                               <button
                                 onClick={() => handleViewStudents(course)}
-                                className="bg-blue-600 text-white px-3 py-1 text-xs rounded hover:bg-blue-700"
+                                className="bg-gray-800 text-white px-3 py-1 text-xs rounded hover:bg-gray-900"
                               >
                                 View Students
                               </button>
                               <button
                                 onClick={() => handleDeleteCourse(course.id)}
-                                className="bg-red-600 text-white px-3 py-1 text-xs rounded hover:bg-red-700"
+                                className="bg-gray-600 text-white px-3 py-1 text-xs rounded hover:bg-gray-700"
                               >
                                 Delete
                               </button>
