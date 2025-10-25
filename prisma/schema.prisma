@@ -50,6 +50,8 @@ model User {
 
   accounts Account[]
   sessions Session[]
+  courses Course[] @relation("CourseInstructor")
+  enrollments Enrollment[]
 }
 
 model VerificationToken {
@@ -60,7 +62,53 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  videoLink   String?
+  price       Decimal  @default(0) // Price in SOL or tokens
+  instructorId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  instructor User @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
+  quizQuestions QuizQuestion[]
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  enrolledAt DateTime @default(now())
+  paidAmount Decimal @default(0) // Amount paid for the course
+  status    EnrollmentStatus @default(ACTIVE)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model QuizQuestion {
+  id           String   @id @default(cuid())
+  courseId     String
+  question     String
+  options      String[] // Array of 4 options
+  correctAnswer Int     // Index of correct option (0-3)
+  createdAt    DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
 enum UserRole {
   STUDENT
   EDUCATOR
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
 }

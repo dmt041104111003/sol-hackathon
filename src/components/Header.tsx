@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useSession } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export function Header() {
@@ -12,12 +12,27 @@ export function Header() {
   const { data: session, status } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Courses', href: '/courses' },
-    { name: 'Dashboard', href: '/dashboard' },
   ];
+
+  const handleDashboardClick = () => {
+    if (!session) {
+      // Chưa đăng nhập
+      return;
+    }
+    
+    if (session.user?.role === 'STUDENT') {
+      router.push('/dashboard/student');
+    } else if (session.user?.role === 'EDUCATOR') {
+      router.push('/dashboard/educator');
+    } else {
+      router.push('/auth/role-selection');
+    }
+  };
 
   const isActive = (href: string) => {
     if (href === '/') {
@@ -52,6 +67,16 @@ export function Header() {
                 {item.name}
               </Link>
             ))}
+            <button
+              onClick={handleDashboardClick}
+              className={`transition-colors ${
+                pathname.startsWith('/dashboard')
+                  ? 'text-blue-600 font-semibold'
+                  : 'text-black hover:text-blue-600'
+              }`}
+            >
+              Dashboard
+            </button>
           </nav>
 
           {/* Wallet Connection */}
@@ -95,6 +120,19 @@ export function Header() {
                   {item.name}
                 </Link>
               ))}
+              <button
+                onClick={() => {
+                  handleDashboardClick();
+                  setIsMenuOpen(false);
+                }}
+                className={`block w-full text-left px-3 py-2 text-base font-medium transition-colors ${
+                  pathname.startsWith('/dashboard')
+                    ? 'text-blue-600 font-semibold bg-blue-50'
+                    : 'text-black hover:text-blue-600'
+                }`}
+              >
+                Dashboard
+              </button>
               {/* Mobile Auth Status */}
               {session && (
                 <div className="px-3 py-2 border-t border-gray-200">

@@ -5,44 +5,44 @@ import { motion } from 'framer-motion';
 export function FeaturesSection() {
   const features = [
     {
-      title: 'Blockchain Security',
-      description: 'Immutable certificates and tamper-proof academic records stored on Solana blockchain.',
-      benefits: ['Forgery Prevention', 'Instant Verification', 'Lifetime Ownership'],
+      title: 'Immutable Certificates',
+      description: 'Blockchain-secured credentials that cannot be forged, lost, or tampered with.',
+      benefits: ['Cryptographic Security', 'Permanent Storage', 'Tamper-Proof Records'],
     },
     {
-      title: 'Token Rewards',
-      description: 'Earn real tokens for learning achievements, course completions, and active participation.',
-      benefits: ['Learn-to-Earn Model', 'Real Economic Value', 'Cross-Platform Use'],
+      title: 'Instant Verification',
+      description: 'Scan QR codes to authenticate credentials in seconds instead of weeks.',
+      benefits: ['Real-time Verification', 'No Contact Required', 'Global Access'],
     },
     {
-      title: 'Global Access',
-      description: 'Decentralized platform accessible worldwide without geographic or institutional barriers.',
-      benefits: ['No Geographic Limits', '24/7 Availability', 'Global Community'],
+      title: 'Full Ownership',
+      description: 'Learners have complete control and ownership of their academic records.',
+      benefits: ['Digital Wallet Storage', 'Portable Credentials', 'Self-Sovereign Identity'],
     },
     {
-      title: 'Peer-to-Peer Learning',
-      description: 'Direct instructor-student connections without intermediary platform fees.',
-      benefits: ['Lower Costs', 'Direct Communication', 'Fair Compensation'],
+      title: 'Cost-Effective',
+      description: 'Low blockchain issuance costs and free verification for all parties.',
+      benefits: ['Reduced Admin Costs', 'Free Verification', 'No Middleman Fees'],
     },
     {
-      title: 'IP Protection',
-      description: 'Blockchain-based intellectual property protection with automated royalty distribution.',
-      benefits: ['Proof of Creation', 'Automatic Royalties', 'Usage Tracking'],
+      title: 'Forgery Prevention',
+      description: 'Cryptographically secured records that cannot be duplicated or falsified.',
+      benefits: ['Mathematical Security', 'Unique Digital Signatures', 'Blockchain Immutability'],
     },
     {
-      title: 'Skill Verification',
-      description: 'Multi-party verification system for soft skills and practical abilities beyond grades.',
-      benefits: ['Holistic Assessment', 'Peer Reviews', 'AI Assessment'],
+      title: 'Cross-Platform Portability',
+      description: 'Credentials work across different systems and institutions worldwide.',
+      benefits: ['Universal Standards', 'Easy Migration', 'Global Recognition'],
     },
     {
-      title: 'AI-Powered Learning',
-      description: 'Personalized learning paths and recommendations powered by artificial intelligence.',
-      benefits: ['Personalized Content', 'Smart Recommendations', 'Progress Prediction'],
+      title: 'Lifetime Management',
+      description: 'Securely manage all certificates and degrees in one digital wallet.',
+      benefits: ['Centralized Storage', 'Easy Access', 'Complete History'],
     },
     {
-      title: 'Interoperability',
-      description: 'Seamless integration with existing educational systems and platforms.',
-      benefits: ['Easy Migration', 'Standard Formats', 'API Integration'],
+      title: 'Enhanced Credibility',
+      description: 'Blockchain verification increases trust and credibility for institutions.',
+      benefits: ['Trusted Verification', 'Reduced Fraud', 'Enhanced Reputation'],
     },
   ];
 
@@ -51,11 +51,11 @@ export function FeaturesSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Revolutionary Features
+            Learning Passport Solution
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Experience the future of education with cutting-edge blockchain technology 
-            and AI-powered learning systems
+            Transform certificate management with blockchain technology. 
+            Create immutable, verifiable credentials that solve real-world problems.
           </p>
         </div>
 
@@ -90,7 +90,7 @@ export function FeaturesSection() {
           ))}
         </div>
 
-        {/* Call to Action */}
+        {/* Problem vs Solution */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

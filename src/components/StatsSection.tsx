@@ -1,69 +1,219 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { LMSAccount } from '@/types';
+import { useState } from 'react';
+import QRCode from 'qrcode';
 
-interface StatsSectionProps {
-  lmsData: LMSAccount | null;
+interface VerificationSectionProps {
+  lmsData?: any;
 }
 
-export function StatsSection({ lmsData }: StatsSectionProps) {
-  const stats = [
-    {
-      label: 'Total Courses',
-      value: lmsData?.totalCourses || 0,
-      color: 'text-black',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      label: 'Active Students',
-      value: lmsData?.totalStudents || 0,
-      color: 'text-black',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      label: 'Certificates Issued',
-      value: 1250,
-      color: 'text-black',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      label: 'Countries',
-      value: 15,
-      color: 'text-black',
-      bgColor: 'bg-blue-50',
-    },
-  ];
+export function StatsSection({ lmsData }: VerificationSectionProps) {
+  const [activeTab, setActiveTab] = useState<'generate' | 'verify'>('generate');
+  const [txHash, setTxHash] = useState('');
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [verifyHash, setVerifyHash] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<any>(null);
+
+  const generateQRCode = async () => {
+    if (!txHash.trim()) {
+      alert('Please enter a transaction hash');
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    try {
+      // Create QR code data with transaction hash
+      const qrData = {
+        type: 'blockchain_verification',
+        txHash: txHash,
+        timestamp: new Date().toISOString(),
+        platform: 'APEC LMS'
+      };
+
+      // Generate QR code
+      const qrCodeDataURL = await QRCode.toDataURL(JSON.stringify(qrData), {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#1f2937',
+          light: '#ffffff'
+        }
+      });
+
+      setQrCodeUrl(qrCodeDataURL);
+    } catch (error) {
+      console.error('QR Code generation failed:', error);
+      alert('Failed to generate QR code. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const verifyTransaction = async () => {
+    if (!verifyHash.trim()) {
+      alert('Please enter a transaction hash to verify');
+      return;
+    }
+
+    setIsVerifying(true);
+    
+    try {
+      // Simulate verification process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Mock verification result
+      const result = {
+        valid: true,
+        txHash: verifyHash,
+        timestamp: new Date().toISOString(),
+        issuer: 'APEC LMS',
+        certificate: 'Blockchain Fundamentals Certificate',
+        student: 'John Doe',
+        status: 'Verified'
+      };
+      
+      setVerificationResult(result);
+    } catch (error) {
+      console.error('Verification failed:', error);
+      setVerificationResult({
+        valid: false,
+        error: 'Transaction not found or invalid'
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   return (
     <section className="py-16 bg-white border-2 border-blue-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-black mb-4">
-            Transforming Education Globally
+            Blockchain Verification
           </h2>
           <p className="text-xl text-black max-w-3xl mx-auto">
-            Join thousands of students and instructors building the future of education 
-            on the blockchain
+            Generate QR codes or verify transaction hashes for blockchain credentials
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              className="text-center"
+        {/* Tab Navigation */}
+        <div className="flex justify-center mb-8">
+          <div className="border border-gray-300 rounded">
+            <button
+              onClick={() => setActiveTab('generate')}
+              className={`px-6 py-2 text-sm ${
+                activeTab === 'generate'
+                  ? 'bg-gray-100 text-gray-900'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
-              <div className="text-4xl font-bold text-gray-900 mb-2">
-                {stat.value.toLocaleString()}
+              Generate QR
+            </button>
+            <button
+              onClick={() => setActiveTab('verify')}
+              className={`px-6 py-2 text-sm border-l border-gray-300 ${
+                activeTab === 'verify'
+                  ? 'bg-gray-100 text-gray-900'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Verify Hash
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-gray-50 rounded-lg p-8">
+          {/* Generate QR Tab */}
+          {activeTab === 'generate' && (
+            <>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Transaction Hash
+                </label>
+                <input
+                  type="text"
+                  value={txHash}
+                  onChange={(e) => setTxHash(e.target.value)}
+                  placeholder="Enter your transaction hash..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
-              <div className="text-gray-600 font-medium">{stat.label}</div>
-            </motion.div>
-          ))}
+
+              <div className="text-center mb-6">
+                <button
+                  onClick={generateQRCode}
+                  disabled={isGenerating || !txHash.trim()}
+                  className="bg-gray-800 text-white px-6 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGenerating ? 'Generating...' : 'Generate QR Code'}
+                </button>
+              </div>
+
+              {qrCodeUrl && (
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Verification QR Code</h3>
+                  <div className="inline-block p-4 bg-white rounded-lg shadow-md">
+                    <img src={qrCodeUrl} alt="Verification QR Code" className="w-64 h-64" />
+                  </div>
+                  <p className="text-sm text-gray-600 mt-4">
+                    Scan this QR code to verify your blockchain transaction
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Verify Hash Tab */}
+          {activeTab === 'verify' && (
+            <>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Transaction Hash to Verify
+                </label>
+                <input
+                  type="text"
+                  value={verifyHash}
+                  onChange={(e) => setVerifyHash(e.target.value)}
+                  placeholder="Enter transaction hash to verify..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="text-center mb-6">
+                <button
+                  onClick={verifyTransaction}
+                  disabled={isVerifying || !verifyHash.trim()}
+                  className="bg-gray-800 text-white px-6 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isVerifying ? 'Verifying...' : 'Verify Transaction'}
+                </button>
+              </div>
+
+              {verificationResult && (
+                <div className="text-center">
+                  {verificationResult.valid ? (
+                    <div className="bg-white border border-gray-300 rounded p-4">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Verification Successful</h3>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p><strong>Certificate:</strong> {verificationResult.certificate}</p>
+                        <p><strong>Student:</strong> {verificationResult.student}</p>
+                        <p><strong>Issuer:</strong> {verificationResult.issuer}</p>
+                        <p><strong>Status:</strong> {verificationResult.status}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-white border border-gray-300 rounded p-4">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Verification Failed</h3>
+                      <p className="text-sm text-gray-600">{verificationResult.error}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </section>
