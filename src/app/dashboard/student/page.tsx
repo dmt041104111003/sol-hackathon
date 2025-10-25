@@ -231,7 +231,7 @@ export default function StudentDashboard() {
                       <div className="flex justify-between items-center">
                         <div className="text-xs text-gray-500">
                           <div>Instructor: {course.instructor.name}</div>
-                          <div>Price: {course.price} SOL</div>
+                          <div>Price: ${(course.price * 200).toFixed(2)} USD</div>
                         </div>
                         <button
                           onClick={() => handleViewCourse(course)}

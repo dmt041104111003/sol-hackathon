@@ -65,6 +65,7 @@ export function CourseGrid({ courses }: CourseGridProps) {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              aria-label="Sort courses by"
             >
               {sortOptions.map((option) => (
                 <option key={option.id} value={option.id}>
@@ -91,7 +92,7 @@ export function CourseGrid({ courses }: CourseGridProps) {
                 <div className="absolute inset-0 bg-black bg-opacity-20"></div>
                 <div className="absolute top-4 right-4">
                   <div className="bg-white bg-opacity-90 rounded-full px-3 py-1 text-sm font-medium text-gray-900">
-                    {course.price} USDC
+                    ${course.price} USD
                   </div>
                 </div>
                 <div className="absolute bottom-4 left-4">

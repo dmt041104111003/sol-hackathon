@@ -34,7 +34,7 @@ export default function EducatorDashboard() {
     title: '',
     videoLink: '',
     description: '',
-    price: 0
+    priceUSD: 0
   });
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState({
@@ -80,7 +80,7 @@ export default function EducatorDashboard() {
           title: courseData.title,
           description: courseData.description,
           videoLink: courseData.videoLink,
-          price: courseData.price,
+          priceUSD: courseData.priceUSD,
           quizQuestions: quizQuestions
         }),
       });
@@ -88,7 +88,7 @@ export default function EducatorDashboard() {
       if (response.ok) {
         alert('Course saved successfully!');
         setShowCreateCourse(false);
-        setCourseData({ title: '', videoLink: '', description: '', price: 0 });
+        setCourseData({ title: '', videoLink: '', description: '', priceUSD: 0 });
         setQuizQuestions([]);
         loadCourses(); // Reload courses
       } else {
@@ -284,7 +284,7 @@ export default function EducatorDashboard() {
                               <div className="flex space-x-4 mt-2 text-xs text-gray-500">
                                 <span>Students: {course.enrollments.length}</span>
                                 <span>Questions: {course.quizQuestions.length}</span>
-                                <span>Price: {course.price} SOL</span>
+                                <span>Price: ${course.price} USD</span>
                                 <span>Created: {new Date(course.createdAt).toLocaleDateString()}</span>
                               </div>
                             </div>
@@ -372,17 +372,20 @@ export default function EducatorDashboard() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Price (SOL)
+                      Price (USD)
                     </label>
                     <input
                       type="number"
                       step="0.01"
                       min="0"
-                      value={courseData.price}
-                      onChange={(e) => setCourseData({...courseData, price: parseFloat(e.target.value) || 0})}
+                      value={courseData.priceUSD}
+                      onChange={(e) => setCourseData({...courseData, priceUSD: parseFloat(e.target.value) || 0})}
                       className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                      placeholder="Enter course price in SOL"
+                      placeholder="Enter course price in USD"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      ≈ {(courseData.priceUSD / 200).toFixed(4)} SOL (Rate: $200/SOL)
+                    </p>
                   </div>
             </div>
 

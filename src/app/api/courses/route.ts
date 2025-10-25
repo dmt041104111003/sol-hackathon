@@ -40,7 +40,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, description, videoLink, price, quizQuestions } = body;
+    const { title, description, videoLink, priceUSD, quizQuestions } = body;
+
+    // Convert USD to SOL (assuming $200 per SOL)
+    const SOL_RATE = 200;
+    const priceInSOL = priceUSD ? priceUSD / SOL_RATE : 0;
 
     // Create course
     const course = await prisma.course.create({
@@ -48,7 +52,7 @@ export async function POST(request: NextRequest) {
         title,
         description,
         videoLink,
-        price: price || 0,
+        price: priceInSOL,
         instructorId: session.user.id
       }
     });
