@@ -1,6 +1,6 @@
 import { Connection, PublicKey, Keypair } from '@solana/web3.js';
 import { AnchorProvider, Program, BN } from '@coral-xyz/anchor';
-import idl from '../../idl/apec_lms.json';
+import idl from './apec_lms.json';
 
 export const PROGRAM_ID = new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS');
 
