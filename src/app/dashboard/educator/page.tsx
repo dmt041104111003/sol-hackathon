@@ -296,7 +296,7 @@ export default function EducatorDashboard() {
                                   rel="noopener noreferrer"
                                   className="text-blue-600 hover:text-blue-800 text-sm"
                                 >
-                                  View Video
+                                  YouTube Link
                                 </a>
                               )}
                               <button
@@ -344,18 +344,21 @@ export default function EducatorDashboard() {
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Video Link
-                </label>
-                <input
-                  type="url"
-                  value={courseData.videoLink}
-                  onChange={(e) => setCourseData({...courseData, videoLink: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                  placeholder="Enter video URL"
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      YouTube Video Link
+                    </label>
+                    <input
+                      type="url"
+                      value={courseData.videoLink}
+                      onChange={(e) => setCourseData({...courseData, videoLink: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                      placeholder="Enter YouTube video URL (e.g., https://www.youtube.com/watch?v=VIDEO_ID)"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Paste the full YouTube URL here
+                    </p>
+                  </div>
               
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -55,6 +55,20 @@ export default function StudentDashboard() {
     setSelectedCourse(course);
   };
 
+  const getYouTubeEmbedUrl = (url: string) => {
+    if (!url) return '';
+    
+    // Extract video ID from various YouTube URL formats
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    
+    if (match && match[2].length === 11) {
+      return `https://www.youtube.com/embed/${match[2]}`;
+    }
+    
+    return url; // Return original URL if not a valid YouTube URL
+  };
+
   // Simple auth - no complex checks
   if (!session) {
     return (
@@ -152,15 +166,15 @@ export default function StudentDashboard() {
               {activeCourseTab === 'video' ? (
                 <div>
                   {selectedCourse.videoLink ? (
-                    <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-                      <a
-                        href={selectedCourse.videoLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-                      >
-                        Watch Video
-                      </a>
+                    <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                      <iframe
+                        src={getYouTubeEmbedUrl(selectedCourse.videoLink)}
+                        title={selectedCourse.title}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
                     </div>
                   ) : (
                     <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
