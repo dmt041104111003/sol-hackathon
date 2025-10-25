@@ -30,6 +30,8 @@ export default function EducatorDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'courses'>('overview');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [showJsonImport, setShowJsonImport] = useState(false);
+  const [jsonInput, setJsonInput] = useState('');
   const [courseData, setCourseData] = useState({
     title: '',
     videoLink: '',
@@ -67,6 +69,7 @@ export default function EducatorDashboard() {
 
   const handleCreateCourse = () => {
     setShowCreateCourse(true);
+    setActiveTab('overview'); // Switch to overview tab when creating course
   };
 
   const handleSaveCourse = async () => {
@@ -86,13 +89,19 @@ export default function EducatorDashboard() {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('Course saved successfully:', result);
         alert('Course saved successfully!');
         setShowCreateCourse(false);
         setCourseData({ title: '', videoLink: '', description: '', priceUSD: 0 });
         setQuizQuestions([]);
+        setShowCreateCourse(false); // Close create course form
+        setActiveTab('courses'); // Switch to courses tab
         loadCourses(); // Reload courses
       } else {
-        alert('Failed to save course');
+        const error = await response.json();
+        console.error('Failed to save course:', error);
+        alert(`Failed to save course: ${error.error || error.details || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error saving course:', error);
@@ -143,6 +152,45 @@ export default function EducatorDashboard() {
     setSelectedCourse(course);
   };
 
+  const handleJsonImport = () => {
+    try {
+      const jsonData = JSON.parse(jsonInput);
+      
+      // Validate required fields
+      if (!jsonData.courseTitle || !jsonData.youtubeLink || !jsonData.description) {
+        alert('Missing required fields: courseTitle, youtubeLink, description');
+        return;
+      }
+
+      // Set course data from JSON
+      setCourseData({
+        title: jsonData.courseTitle,
+        videoLink: jsonData.youtubeLink,
+        description: jsonData.description,
+        priceUSD: jsonData.priceUSD || 0
+      });
+
+      // Set quiz questions from JSON
+      if (jsonData.quizQuestions && Array.isArray(jsonData.quizQuestions)) {
+        const questions = jsonData.quizQuestions.map((q: any, index: number) => ({
+          id: `imported-${index}`,
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.options.indexOf(q.correctAnswer)
+        }));
+        setQuizQuestions(questions);
+      }
+
+      setShowJsonImport(false);
+      setJsonInput('');
+      setShowCreateCourse(true); // Open create course form
+      setActiveTab('overview'); // Switch to overview tab
+      alert('Course data imported successfully! Review and save the course.');
+    } catch (error) {
+      alert('Invalid JSON format. Please check your input.');
+    }
+  };
+
   // Simple check - if no session, show message
   if (status === 'loading') {
     return (
@@ -180,7 +228,10 @@ export default function EducatorDashboard() {
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
               <button
-                onClick={() => setActiveTab('overview')}
+                onClick={() => {
+                  setActiveTab('overview');
+                  setShowCreateCourse(false); // Hide create course form when switching to overview tab
+                }}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'overview'
                     ? 'border-gray-800 text-gray-900'
@@ -190,7 +241,10 @@ export default function EducatorDashboard() {
                 Overview
               </button>
               <button
-                onClick={() => setActiveTab('courses')}
+                onClick={() => {
+                  setActiveTab('courses');
+                  setShowCreateCourse(false); // Hide create course form when switching to courses tab
+                }}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'courses'
                     ? 'border-gray-800 text-gray-900'
@@ -240,6 +294,71 @@ export default function EducatorDashboard() {
           </div>
         )}
 
+        {/* JSON Import Modal */}
+        {showJsonImport && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Import Course from JSON
+                </h3>
+                <button
+                  onClick={() => setShowJsonImport(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  JSON Data
+                </label>
+                <textarea
+                  value={jsonInput}
+                  onChange={(e) => setJsonInput(e.target.value)}
+                  className="w-full h-64 px-3 py-2 border border-gray-300 rounded text-sm font-mono"
+                  placeholder="Paste your JSON data here..."
+                />
+              </div>
+
+              <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
+                <h4 className="font-medium text-gray-900 mb-2">Expected JSON Format:</h4>
+                <pre className="text-xs text-gray-600 overflow-x-auto">
+{`{
+  "courseTitle": "Introduction to Web3 Development",
+  "youtubeLink": "https://www.youtube.com/watch?v=VIDEO_ID",
+  "description": "Course description here...",
+  "priceUSD": 25,
+  "quizQuestions": [
+    {
+      "question": "What is a blockchain?",
+      "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+      "correctAnswer": "Option 1"
+    }
+  ]
+}`}
+                </pre>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleJsonImport}
+                  className="bg-blue-600 text-white px-4 py-2 text-sm rounded"
+                >
+                  Import Course
+                </button>
+                <button
+                  onClick={() => setShowJsonImport(false)}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 text-sm rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {!showCreateCourse ? (
           <>
             {activeTab === 'overview' ? (
@@ -267,12 +386,20 @@ export default function EducatorDashboard() {
                 {/* Create Course Button */}
                 <div className="bg-white border border-gray-300 rounded p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Course Management</h3>
-                  <button
-                    onClick={handleCreateCourse}
-                    className="bg-gray-800 text-white px-4 py-2 text-sm"
-                  >
-                    Create New Course
-                  </button>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handleCreateCourse}
+                      className="bg-gray-800 text-white px-4 py-2 text-sm"
+                    >
+                      Create New Course
+                    </button>
+                    <button
+                      onClick={() => setShowJsonImport(true)}
+                      className="bg-blue-600 text-white px-4 py-2 text-sm"
+                    >
+                      Import from JSON
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
