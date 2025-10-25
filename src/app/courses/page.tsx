@@ -36,7 +36,7 @@ export default function CoursesPage() {
   const loadCourses = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/courses/public');
+      const response = await fetch('/api/courses');
       if (response.ok) {
         const data = await response.json();
         setAllCourses(data.courses);
@@ -45,7 +45,8 @@ export default function CoursesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  };
+
   const totalPages = Math.ceil(allCourses.length / coursesPerPage);
   const startIndex = (currentPage - 1) * coursesPerPage;
   const endIndex = startIndex + coursesPerPage;
@@ -114,7 +115,8 @@ export default function CoursesPage() {
           toPubkey: instructorWallet, // Send to instructor's wallet
           lamports: lamports,
         })
-      );
+      );
+
       const { blockhash } = await connection.getLatestBlockhash();
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
@@ -140,7 +142,8 @@ export default function CoursesPage() {
       });
 
       if (response.ok) {
-        alert('Successfully enrolled in the course!');
+        alert('Successfully enrolled in the course!');
+
         router.push('/dashboard/student');
       } else {
         const error = await response.json();

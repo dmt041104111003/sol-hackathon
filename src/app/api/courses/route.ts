@@ -1,23 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-
-    const whereClause = session.user.role === 'EDUCATOR' 
-      ? { instructorId: session.user.id }
-      : {};
-
     const courses = await prisma.course.findMany({
-      where: whereClause,
       include: {
         instructor: {
           select: {
@@ -36,7 +22,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ courses });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
 
