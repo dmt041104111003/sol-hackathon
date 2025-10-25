@@ -34,12 +34,16 @@ export function Header() {
       return;
     }
     
-    if (session.user?.role === 'STUDENT') {
-      router.push('/dashboard/student');
-    } else if (session.user?.role === 'EDUCATOR') {
-      router.push('/dashboard/educator');
-    } else {
+    // If user has no role, redirect to role selection
+    if (!session.user?.role) {
       router.push('/auth/role-selection');
+      return;
+    }
+    
+    if (session.user.role === 'STUDENT') {
+      router.push('/dashboard/student');
+    } else if (session.user.role === 'EDUCATOR') {
+      router.push('/dashboard/educator');
     }
   };
 

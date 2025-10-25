@@ -20,7 +20,7 @@ export default function RoleSelection() {
       // Đã có role, redirect đến dashboard tương ứng
       if (session.user.role === 'STUDENT') {
         router.push('/dashboard/student');
-      } else {
+      } else if (session.user.role === 'EDUCATOR') {
         router.push('/dashboard/educator');
       }
     }

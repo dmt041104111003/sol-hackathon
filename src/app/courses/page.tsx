@@ -80,14 +80,74 @@ export default function CoursesPage() {
       
       // Confirm payment
       const confirmPayment = confirm(
-        `Enroll in "${course.title}" for ${(course.price * 200).toFixed(2)} USD?\n\nThis will process payment through your Solana wallet.`
+        `Enroll in "${course.title}" for ${course.price} SOL?\n\nThis will process payment through your Solana wallet.`
       );
 
       if (!confirmPayment) {
         return;
       }
 
-      // Call enrollment API
+      // First, get instructor wallet address from enroll API
+      console.log('Getting instructor wallet address...');
+      const preEnrollResponse = await fetch('/api/enroll', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          courseId: course.id,
+          walletAddress: publicKey.toString(),
+          preCheck: true, // Just get instructor info, don't create enrollment yet
+        }),
+      });
+
+      if (!preEnrollResponse.ok) {
+        const error = await preEnrollResponse.json();
+        throw new Error(error.error || 'Failed to get instructor wallet');
+      }
+
+      const preEnrollData = await preEnrollResponse.json();
+      const instructorWalletAddress = preEnrollData.instructorWalletAddress;
+
+      // Process payment through Solana
+      console.log('Processing payment through Solana wallet...');
+      
+      // Create a transfer transaction for payment to instructor
+      const { Connection, Transaction, SystemProgram, LAMPORTS_PER_SOL, PublicKey } = await import('@solana/web3.js');
+      const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+      
+      // Convert price to lamports
+      const lamports = Math.floor(course.price * LAMPORTS_PER_SOL);
+      
+      // Create transaction to send payment to instructor
+      const instructorWallet = new PublicKey(instructorWalletAddress);
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: instructorWallet, // Send to instructor's wallet
+          lamports: lamports,
+        })
+      );
+
+      // Get recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = publicKey;
+
+      // Sign and send transaction
+      if (!signTransaction) {
+        throw new Error('Wallet does not support signing transactions');
+      }
+      const signedTransaction = await signTransaction(transaction);
+      const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+      
+      console.log('Payment transaction sent:', signature);
+      
+      // Wait for confirmation
+      await connection.confirmTransaction(signature, 'confirmed');
+      console.log('Payment confirmed!');
+
+      // Now call enrollment API to create enrollment
       const response = await fetch('/api/enroll', {
         method: 'POST',
         headers: {
@@ -96,6 +156,7 @@ export default function CoursesPage() {
         body: JSON.stringify({
           courseId: course.id,
           walletAddress: publicKey.toString(),
+          paymentSignature: signature,
         }),
       });
 

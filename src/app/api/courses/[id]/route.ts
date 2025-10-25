@@ -1,43 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
-export async function DELETE(
+export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const courseId = params.id;
 
-    // Check if course exists and belongs to the instructor
-    const course = await prisma.course.findFirst({
-      where: {
-        id: courseId,
-        instructorId: session.user.id
+    if (!courseId) {
+      return NextResponse.json({ error: 'Course ID is required' }, { status: 400 });
+    }
+
+    // Get course with instructor details
+    const course = await (prisma as any).course.findUnique({
+      where: { id: courseId },
+      include: {
+        instructor: {
+          select: {
+            id: true,
+            name: true,
+            walletAddress: true
+          }
+        },
+        enrollments: {
+          select: {
+            id: true,
+            userId: true,
+            enrolledAt: true,
+            paidAmount: true,
+            status: true
+          }
+        },
+        quizQuestions: {
+          select: {
+            id: true,
+            question: true,
+            options: true,
+            correctAnswer: true
+          }
+        }
       }
     });
 
     if (!course) {
-      return NextResponse.json({ error: 'Course not found or unauthorized' }, { status: 404 });
+      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
-    // Delete course (cascade will handle related records)
-    await prisma.course.delete({
-      where: {
-        id: courseId
-      }
+    return NextResponse.json({
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      videoLink: course.videoLink,
+      price: course.price,
+      instructor: course.instructor,
+      enrollments: course.enrollments,
+      quizQuestions: course.quizQuestions,
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt
     });
 
-    return NextResponse.json({ message: 'Course deleted successfully' });
   } catch (error) {
-    console.error('Error deleting course:', error);
+    console.error('Error fetching course:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

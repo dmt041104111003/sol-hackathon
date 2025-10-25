@@ -14,17 +14,22 @@ export function WalletAuth() {
     const handleWalletAuth = async () => {
       if (connected && publicKey && !session) {
         try {
-          // Tự động đăng nhập với wallet address
+          console.log('Attempting wallet authentication...');
+          // Tự động đăng nhập với wallet address (no role by default)
           const result = await signIn('credentials', {
             walletAddress: publicKey.toString(),
-            role: 'STUDENT', // Default role, có thể thay đổi sau
+            role: '', // Empty string instead of null
             redirect: false
           });
 
+          console.log('SignIn result:', result);
+          
           if (result?.ok) {
-            // Đăng nhập thành công, không redirect tự động
-            // Người dùng có thể navigate tự do giữa các trang
-            console.log('Wallet authentication successful');
+            // Đăng nhập thành công, redirect đến role selection
+            console.log('Wallet authentication successful, redirecting to role selection');
+            router.push('/auth/role-selection');
+          } else {
+            console.log('SignIn failed:', result?.error);
           }
         } catch (error) {
           console.error('Wallet auth error:', error);

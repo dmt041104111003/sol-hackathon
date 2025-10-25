@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 interface QuizQuestion {
   id: string;
@@ -24,6 +25,7 @@ interface Course {
 
 export default function EducatorDashboard() {
   const { data: session, status } = useSession();
+  const { connected, publicKey } = useWallet();
   const router = useRouter();
   const [showCreateCourse, setShowCreateCourse] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -44,13 +46,22 @@ export default function EducatorDashboard() {
     options: ['', '', '', ''],
     correctAnswer: 0
   });
+  const [educatorWalletAddress, setEducatorWalletAddress] = useState<string>('');
 
   // Load courses from database
   useEffect(() => {
     if (session) {
       loadCourses();
+      loadEducatorProfile();
     }
   }, [session]);
+
+  // Update wallet address when wallet connects
+  useEffect(() => {
+    if (connected && publicKey) {
+      setEducatorWalletAddress(publicKey.toString());
+    }
+  }, [connected, publicKey]);
 
   const loadCourses = async () => {
     try {
@@ -64,6 +75,50 @@ export default function EducatorDashboard() {
       console.error('Error loading courses:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEducatorProfile = async () => {
+    try {
+      const response = await fetch('/api/educator/profile');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.walletAddress) {
+          setEducatorWalletAddress(data.walletAddress);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading educator profile:', error);
+    }
+  };
+
+  const updateEducatorWallet = async () => {
+    if (!connected || !publicKey) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/educator/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          walletAddress: publicKey.toString(),
+        }),
+      });
+
+      if (response.ok) {
+        alert('Wallet address updated successfully!');
+        setEducatorWalletAddress(publicKey.toString());
+      } else {
+        const error = await response.json();
+        alert(`Failed to update wallet: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error updating wallet:', error);
+      alert('Failed to update wallet address');
     }
   };
 
@@ -380,6 +435,40 @@ export default function EducatorDashboard() {
                     <p className="text-2xl font-bold text-gray-900">
                       {courses.reduce((total, course) => total + course.quizQuestions.length, 0)}
                     </p>
+                  </div>
+                </div>
+
+                {/* Wallet Information */}
+                <div className="bg-white border border-gray-300 rounded p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Wallet</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Current Wallet Address
+                      </label>
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="text"
+                          value={educatorWalletAddress}
+                          readOnly
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+                          placeholder="No wallet connected"
+                        />
+                        <button
+                          onClick={updateEducatorWallet}
+                          disabled={!connected}
+                          className="bg-blue-600 text-white px-4 py-2 text-sm rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          {connected ? 'Update Wallet' : 'Connect Wallet'}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {connected 
+                          ? 'Wallet connected. Click "Update Wallet" to save your address for payments.'
+                          : 'Connect your wallet to receive payments from students.'
+                        }
+                      </p>
+                    </div>
                   </div>
                 </div>
 
