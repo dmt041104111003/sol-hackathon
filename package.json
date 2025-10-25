@@ -1,0 +1,61 @@
+{
+  "name": "pecl-ms-blockchain",
+  "version": "1.0.0",
+  "description": "PECL Education Ecosystem LMS - Blockchain-based Learning Management System",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "anchor:build": "anchor build",
+    "anchor:deploy": "anchor deploy",
+    "anchor:test": "anchor test"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.11.0",
+    "@coral-xyz/anchor": "^0.29.0",
+    "@hookform/resolvers": "^3.3.2",
+    "@prisma/client": "^6.18.0",
+    "@solana/spl-token": "^0.3.9",
+    "@solana/wallet-adapter-base": "^0.9.23",
+    "@solana/wallet-adapter-react": "^0.15.35",
+    "@solana/wallet-adapter-react-ui": "^0.9.35",
+    "@solana/wallet-adapter-wallets": "^0.19.32",
+    "@solana/web3.js": "^1.87.6",
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.16",
+    "date-fns": "^2.30.0",
+    "framer-motion": "^10.16.16",
+    "lucide-react": "^0.294.0",
+    "next": "14.0.4",
+    "next-auth": "^4.24.11",
+    "postcss": "^8.4.32",
+    "prisma": "^6.18.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.48.2",
+    "react-hot-toast": "^2.4.1",
+    "tailwindcss": "^3.3.6",
+    "typescript": "^5.3.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.0.4"
+  },
+  "keywords": [
+    "blockchain",
+    "solana",
+    "lms",
+    "education",
+    "nft",
+    "certificates",
+    "apec",
+    "vietnam"
+  ],
+  "author": "PECL-MS Team",
+  "license": "MIT"
+}
