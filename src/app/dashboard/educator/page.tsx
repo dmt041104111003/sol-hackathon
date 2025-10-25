@@ -46,13 +46,15 @@ export default function EducatorDashboard() {
     options: ['', '', '', ''],
     correctAnswer: 0
   });
-  const [educatorWalletAddress, setEducatorWalletAddress] = useState<string>('');
+  const [educatorWalletAddress, setEducatorWalletAddress] = useState<string>('');
+
   useEffect(() => {
     if (session) {
       loadCourses();
       loadEducatorProfile();
     }
-  }, [session]);
+  }, [session]);
+
   useEffect(() => {
     if (connected && publicKey) {
       setEducatorWalletAddress(publicKey.toString());
@@ -222,7 +224,8 @@ export default function EducatorDashboard() {
 
       if (response.ok) {
         const result = await response.json();
-        alert(`Certificate minted successfully!\n\nCertificate ID: ${result.certificateId}\nTransaction: ${result.transaction}\n\nCertificate is now on the blockchain.`);
+        alert(`Certificate minted successfully!\n\nCertificate ID: ${result.certificateId}\nTransaction: ${result.transaction}\n\nCertificate is now on the blockchain.`);
+
         setSelectedCourse(null);
         loadCourses();
       } else {
@@ -252,17 +255,20 @@ export default function EducatorDashboard() {
 
   const handleJsonImport = () => {
     try {
-      const jsonData = JSON.parse(jsonInput);
+      const jsonData = JSON.parse(jsonInput);
+
       if (!jsonData.courseTitle || !jsonData.youtubeLink || !jsonData.description) {
         alert('Missing required fields: courseTitle, youtubeLink, description');
         return;
-      }
+      }
+
       setCourseData({
         title: jsonData.courseTitle,
         videoLink: jsonData.youtubeLink,
         description: jsonData.description,
         priceUSD: jsonData.priceUSD || 0
-      });
+      });
+
       if (jsonData.quizQuestions && Array.isArray(jsonData.quizQuestions)) {
         const questions = jsonData.quizQuestions.map((q: any, index: number) => ({
           id: `imported-${index}`,
