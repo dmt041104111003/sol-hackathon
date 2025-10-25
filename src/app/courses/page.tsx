@@ -65,6 +65,12 @@ export default function CoursesPage() {
       return;
     }
 
+    // Check if user is an educator
+    if (session.user?.role === 'EDUCATOR') {
+      alert('Educators cannot enroll in courses. Only students can enroll.');
+      return;
+    }
+
     if (enrolling) {
       return; // Prevent multiple enrollments
     }
@@ -172,14 +178,20 @@ export default function CoursesPage() {
                 <div className="mt-8 pt-4">
                   <button 
                     onClick={() => handleEnroll(course)}
-                    disabled={enrolling === course.id}
-                    className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={enrolling === course.id || session?.user?.role === 'EDUCATOR'}
+                    className={`w-full py-3 px-4 rounded-md transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+                      session?.user?.role === 'EDUCATOR'
+                        ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
                   >
                     {enrolling === course.id 
                       ? 'Processing...' 
-                      : connected 
-                        ? `Enroll - ${(course.price * 200).toFixed(2)} USD` 
-                        : 'Connect Wallet'
+                      : session?.user?.role === 'EDUCATOR'
+                        ? 'Educators Cannot Enroll'
+                        : connected 
+                          ? `Enroll - ${(course.price * 200).toFixed(2)} USD` 
+                          : 'Connect Wallet'
                     }
                   </button>
                 </div>

@@ -30,6 +30,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
+    // Check if user is trying to enroll in their own course
+    if (course.instructorId === session.user.id) {
+      return NextResponse.json({ 
+        error: 'You cannot enroll in your own course' 
+      }, { status: 400 });
+    }
+
+    // Check if user is an educator trying to enroll in another educator's course
+    if (session.user.role === 'EDUCATOR') {
+      return NextResponse.json({ 
+        error: 'Educators cannot enroll in courses. Only students can enroll.' 
+      }, { status: 400 });
+    }
+
     // Check if already enrolled
     const existingEnrollment = await prisma.enrollment.findUnique({
       where: {
