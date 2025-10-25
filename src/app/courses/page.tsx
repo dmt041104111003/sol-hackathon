@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 interface Course {
   id: string;
@@ -18,10 +20,13 @@ interface Course {
 }
 
 export default function CoursesPage() {
-  const { connected } = useWallet();
+  const { connected, publicKey, signTransaction } = useWallet();
+  const { data: session } = useSession();
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState<string | null>(null);
   const coursesPerPage = 6;
 
   useEffect(() => {
@@ -52,6 +57,56 @@ export default function CoursesPage() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleEnroll = async (course: Course) => {
+    if (!connected || !publicKey || !session) {
+      alert('Please connect your wallet and login first');
+      return;
+    }
+
+    if (enrolling) {
+      return; // Prevent multiple enrollments
+    }
+
+    try {
+      setEnrolling(course.id);
+      
+      // Confirm payment
+      const confirmPayment = confirm(
+        `Enroll in "${course.title}" for ${(course.price * 200).toFixed(2)} USD?\n\nThis will process payment through your Solana wallet.`
+      );
+
+      if (!confirmPayment) {
+        return;
+      }
+
+      // Call enrollment API
+      const response = await fetch('/api/enroll', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          courseId: course.id,
+          walletAddress: publicKey.toString(),
+        }),
+      });
+
+      if (response.ok) {
+        alert('Successfully enrolled in the course!');
+        // Optionally redirect to student dashboard
+        router.push('/dashboard/student');
+      } else {
+        const error = await response.json();
+        alert(`Enrollment failed: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Enrollment error:', error);
+      alert('Enrollment failed. Please try again.');
+    } finally {
+      setEnrolling(null);
+    }
   };
 
   if (loading) {
@@ -115,8 +170,17 @@ export default function CoursesPage() {
 
                 {/* Button - luôn ở dưới cùng với margin cố định */}
                 <div className="mt-8 pt-4">
-                  <button className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium">
-                    {connected ? 'Enroll' : 'Connect Wallet'}
+                  <button 
+                    onClick={() => handleEnroll(course)}
+                    disabled={enrolling === course.id}
+                    className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {enrolling === course.id 
+                      ? 'Processing...' 
+                      : connected 
+                        ? `Enroll - ${(course.price * 200).toFixed(2)} USD` 
+                        : 'Connect Wallet'
+                    }
                   </button>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useSession } from 'next-auth/react';
@@ -11,8 +11,13 @@ export function Header() {
   const { connected } = useWallet();
   const { data: session, status } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -20,8 +25,12 @@ export function Header() {
   ];
 
   const handleDashboardClick = () => {
+    if (status === 'loading') {
+      return;
+    }
+    
     if (!session) {
-      // Chưa đăng nhập
+      alert('Please connect your wallet and login first');
       return;
     }
     
@@ -79,17 +88,17 @@ export function Header() {
             </button>
           </nav>
 
-          {/* Wallet Connection */}
-          <div className="flex items-center space-x-4">
-            {session && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">
-                  {session.user?.name || session.user?.email || 'Connected'}
-                </span>
+              {/* Wallet Connection */}
+              <div className="flex items-center space-x-4">
+                {mounted && session && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">
+                      {session.user?.name || session.user?.email || 'Connected'}
+                    </span>
+                  </div>
+                )}
+                {mounted && <WalletMultiButton className="!bg-blue-600 hover:!bg-blue-700 !rounded-lg" />}
               </div>
-            )}
-            <WalletMultiButton className="!bg-blue-600 hover:!bg-blue-700 !rounded-lg" />
-          </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden">
@@ -133,14 +142,14 @@ export function Header() {
               >
                 Dashboard
               </button>
-              {/* Mobile Auth Status */}
-              {session && (
-                <div className="px-3 py-2 border-t border-gray-200">
-                  <span className="text-sm text-gray-600">
-                    {session.user?.name || session.user?.email || 'Connected'}
-                  </span>
-                </div>
-              )}
+                  {/* Mobile Auth Status */}
+                  {mounted && session && (
+                    <div className="px-3 py-2 border-t border-gray-200">
+                      <span className="text-sm text-gray-600">
+                        {session.user?.name || session.user?.email || 'Connected'}
+                      </span>
+                    </div>
+                  )}
             </div>
           </div>
         )}

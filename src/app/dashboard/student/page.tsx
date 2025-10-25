@@ -70,6 +70,17 @@ export default function StudentDashboard() {
   };
 
   // Simple auth - no complex checks
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="mt-4 text-lg">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -247,12 +258,17 @@ export default function StudentDashboard() {
                           <div>Instructor: {course.instructor.name}</div>
                           <div>Price: ${(course.price * 200).toFixed(2)} USD</div>
                         </div>
-                        <button
-                          onClick={() => handleViewCourse(course)}
-                          className="bg-gray-800 text-white px-3 py-1 text-xs rounded hover:bg-gray-900"
-                        >
-                          View Course
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleViewCourse(course)}
+                            className="bg-gray-800 text-white px-3 py-1 text-xs rounded hover:bg-gray-900"
+                          >
+                            View Course
+                          </button>
+                          <span className="bg-green-100 text-green-800 px-2 py-1 text-xs rounded">
+                            Enrolled
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}
