@@ -11,11 +11,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+
+    const whereClause = session.user.role === 'EDUCATOR' 
+      ? { instructorId: session.user.id }
+      : {};
+
     const courses = await prisma.course.findMany({
-      where: {
-        instructorId: session.user.id
-      },
+      where: whereClause,
       include: {
+        instructor: {
+          select: {
+            id: true,
+            name: true,
+            walletAddress: true
+          }
+        },
         enrollments: true,
         quizQuestions: true
       },
@@ -42,9 +52,11 @@ export async function POST(request: NextRequest) {
 
     if (!title || !description) {
       return NextResponse.json({ error: 'Title and description are required' }, { status: 400 });
-    }
+    }
+
     const SOL_RATE = 200;
-    const priceInSOL = priceUSD ? priceUSD / SOL_RATE : 0;
+    const priceInSOL = priceUSD ? priceUSD / SOL_RATE : 0;
+
     const course = await prisma.course.create({
       data: {
         title,
@@ -53,7 +65,8 @@ export async function POST(request: NextRequest) {
         price: priceInSOL,
         instructorId: session.user.id
       }
-    });
+    });
+
     if (quizQuestions && quizQuestions.length > 0) {
       await prisma.quizQuestion.createMany({
         data: quizQuestions.map((q: any) => ({
