@@ -43,8 +43,21 @@ export async function POST(request: NextRequest) {
     const totalQuestions = quizQuestions.length;
     const percentage = Math.round((score / totalQuestions) * 100);
 
-    // Save quiz result (optional - you can create a QuizResult table if needed)
-    // For now, we'll just return the score
+    // Save quiz result to enrollment
+    const isPerfectScore = score === totalQuestions;
+    
+    await (prisma as any).enrollment.updateMany({
+      where: {
+        userId: session.user.id,
+        courseId: courseId
+      },
+      data: {
+        quizScore: score,
+        quizAnswers: answers,
+        status: isPerfectScore ? 'COMPLETED' : 'ACTIVE',
+        completedAt: isPerfectScore ? new Date() : null
+      }
+    });
 
     return NextResponse.json({
       score,

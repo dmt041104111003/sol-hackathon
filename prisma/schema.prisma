@@ -84,6 +84,9 @@ model Enrollment {
   enrolledAt DateTime @default(now())
   paidAmount Decimal @default(0) // Amount paid for the course
   status    EnrollmentStatus @default(ACTIVE)
+  quizScore Int?    // Quiz score (number of correct answers)
+  quizAnswers Json? // Store quiz answers as JSON
+  completedAt DateTime? // When the course was completed
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)

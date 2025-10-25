@@ -208,11 +208,19 @@ export default function EducatorDashboard() {
   };
 
   const getCompletedStudents = (course: Course) => {
-    return course.enrollments.filter(enrollment => enrollment.status === 'COMPLETED');
+    return course.enrollments.filter(enrollment => {
+      const totalQuestions = course.quizQuestions?.length || 0;
+      const quizScore = (enrollment as any).quizScore || 0;
+      return totalQuestions > 0 && quizScore === totalQuestions;
+    });
   };
 
   const getActiveStudents = (course: Course) => {
-    return course.enrollments.filter(enrollment => enrollment.status === 'ACTIVE');
+    return course.enrollments.filter(enrollment => {
+      const totalQuestions = course.quizQuestions?.length || 0;
+      const quizScore = (enrollment as any).quizScore || 0;
+      return quizScore < totalQuestions;
+    });
   };
 
   const handleJsonImport = () => {

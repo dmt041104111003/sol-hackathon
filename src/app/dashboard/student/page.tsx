@@ -24,8 +24,9 @@ interface QuizQuestion {
 
 export default function StudentDashboard() {
   const { data: session, status } = useSession();
-  const [activeTab, setActiveTab] = useState<'courses' | 'certificates'>('courses');
+  const [activeTab, setActiveTab] = useState<'courses' | 'completed' | 'certificates'>('courses');
   const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
+  const [completedCourses, setCompletedCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [activeCourseTab, setActiveCourseTab] = useState<'video' | 'quiz'>('video');
   const [loading, setLoading] = useState(true);
@@ -43,10 +44,45 @@ export default function StudentDashboard() {
   const loadEnrolledCourses = async () => {
     try {
       setLoading(true);
+      console.log('Loading enrolled courses...');
       const response = await fetch('/api/student/courses');
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
-        setEnrolledCourses(data.courses);
+        console.log('Courses data:', data);
+        const allCourses = data.courses;
+        console.log('All courses:', allCourses);
+        
+        // Separate active and completed courses based on quiz score
+        const activeCourses = allCourses.filter((course: any) => {
+          const enrollment = course.enrollments?.[0];
+          if (!enrollment) return false;
+          
+          // Course is active if no quiz score or score < 100%
+          const totalQuestions = course.quizQuestions?.length || 0;
+          const quizScore = enrollment.quizScore || 0;
+          return quizScore < totalQuestions;
+        });
+        
+        const completedCourses = allCourses.filter((course: any) => {
+          const enrollment = course.enrollments?.[0];
+          if (!enrollment) return false;
+          
+          // Course is completed if quiz score = 100%
+          const totalQuestions = course.quizQuestions?.length || 0;
+          const quizScore = enrollment.quizScore || 0;
+          return totalQuestions > 0 && quizScore === totalQuestions;
+        });
+        
+        console.log('Active courses:', activeCourses);
+        console.log('Completed courses:', completedCourses);
+        
+        setEnrolledCourses(activeCourses);
+        setCompletedCourses(completedCourses);
+      } else {
+        const error = await response.json();
+        console.error('API Error:', error);
       }
     } catch (error) {
       console.error('Error loading courses:', error);
@@ -93,18 +129,19 @@ export default function StudentDashboard() {
         setQuizScore(result.score);
         setQuizSubmitted(true);
         
-        // Update enrollment status to COMPLETED
-        await fetch('/api/enrollment/complete', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            courseId: selectedCourse.id
-          }),
-        });
+        // Course completion is now handled in quiz/submit API
+        // No need to call enrollment/complete separately
 
-        alert(`Quiz submitted! Your score: ${result.score}/${selectedCourse.quizQuestions.length} (${Math.round((result.score / selectedCourse.quizQuestions.length) * 100)}%)`);
+        const percentage = Math.round((result.score / selectedCourse.quizQuestions.length) * 100);
+        
+        if (result.score === selectedCourse.quizQuestions.length) {
+          alert(`Perfect! Quiz completed with 100% score: ${result.score}/${selectedCourse.quizQuestions.length} (${percentage}%)`);
+        } else {
+          alert(`Quiz submitted! Your score: ${result.score}/${selectedCourse.quizQuestions.length} (${percentage}%). You need 100% to complete this course.`);
+        }
+        
+        // Reload courses to update the lists
+        await loadEnrolledCourses();
       } else {
         const error = await response.json();
         alert(`Quiz submission failed: ${error.error}`);
@@ -119,6 +156,62 @@ export default function StudentDashboard() {
 
   const handleViewCourse = (course: Course) => {
     setSelectedCourse(course);
+    
+    // Check if course is completed - don't reset quiz state for completed courses
+    const isCompleted = (course as any).enrollments?.some((enrollment: any) => enrollment.status === 'COMPLETED');
+    
+    if (!isCompleted) {
+      // Only reset quiz state for active courses
+      setQuizAnswers({});
+      setQuizScore(null);
+      setQuizSubmitted(false);
+      setSubmittingQuiz(false);
+    }
+  };
+
+  const handleRetakeQuiz = async () => {
+    try {
+      // Check if course has quiz score before resetting
+      const enrollment = (selectedCourse as any).enrollments?.[0];
+      const totalQuestions = selectedCourse?.quizQuestions?.length || 0;
+      const quizScore = enrollment?.quizScore || 0;
+      
+      if (totalQuestions === 0) {
+        alert('This course has no quiz questions.');
+        return;
+      }
+      
+      if (quizScore === 0) {
+        alert('You haven\'t taken this quiz yet.');
+        return;
+      }
+      
+      // Call API to reset quiz data in database
+      const response = await fetch('/api/quiz/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId: selectedCourse?.id }),
+      });
+
+      if (response.ok) {
+        // Reset UI state
+        setQuizAnswers({});
+        setQuizScore(null);
+        setQuizSubmitted(false);
+        setSubmittingQuiz(false);
+        
+        // Reload courses to update the lists
+        await loadEnrolledCourses();
+        
+        alert('Quiz reset successfully! You can now retake the quiz.');
+      } else {
+        const error = await response.json();
+        alert(`Failed to reset quiz: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error resetting quiz:', error);
+      alert('Failed to reset quiz. Please try again.');
+    }
   };
 
   const getYouTubeEmbedUrl = (url: string) => {
@@ -182,6 +275,16 @@ export default function StudentDashboard() {
                 My Courses
               </button>
               <button
+                onClick={() => setActiveTab('completed')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'completed'
+                    ? 'border-gray-800 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Completed ({completedCourses.length})
+              </button>
+              <button
                 onClick={() => setActiveTab('certificates')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'certificates'
@@ -189,7 +292,7 @@ export default function StudentDashboard() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Certificates & Tokens
+                Certificates
               </button>
             </nav>
           </div>
@@ -267,54 +370,162 @@ export default function StudentDashboard() {
                 <div>
                   {selectedCourse.quizQuestions.length > 0 ? (
                     <div className="space-y-4">
-                      {!quizSubmitted ? (
-                        <>
-                          {selectedCourse.quizQuestions.map((question, index) => (
-                            <div key={question.id} className="border border-gray-200 rounded p-4">
-                              <h4 className="font-medium text-gray-900 mb-3">
-                                Question {index + 1}: {question.question}
-                              </h4>
-                              <div className="space-y-2">
-                                {question.options.map((option, optionIndex) => (
-                                  <label key={optionIndex} className="flex items-center">
-                                    <input
-                                      type="radio"
-                                      name={`question-${question.id}`}
-                                      value={optionIndex}
-                                      checked={quizAnswers[question.id] === optionIndex}
-                                      onChange={() => handleQuizAnswerChange(question.id, optionIndex)}
-                                      className="mr-2"
-                                    />
-                                    <span className="text-gray-700">{option}</span>
-                                  </label>
-                                ))}
+                      {/* Check if course is completed based on quiz score */}
+                      {(() => {
+                        const enrollment = (selectedCourse as any).enrollments?.[0];
+                        const totalQuestions = selectedCourse.quizQuestions?.length || 0;
+                        const quizScore = enrollment?.quizScore || 0;
+                        const isCompleted = totalQuestions > 0 && quizScore === totalQuestions;
+                        const shouldShowQuiz = !isCompleted && !quizSubmitted;
+                        
+                        if (isCompleted || quizSubmitted) {
+                          // Get quiz data from enrollment
+                          const enrollment = (selectedCourse as any).enrollments?.[0];
+                          const dbQuizScore = enrollment?.quizScore || 0;
+                          const dbQuizAnswers = enrollment?.quizAnswers;
+                          
+                          console.log('Enrollment data:', enrollment);
+                          console.log('DB Quiz Score:', dbQuizScore);
+                          console.log('DB Quiz Answers:', dbQuizAnswers);
+                          
+                          return (
+                            <div className="py-8">
+                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">Quiz Results</h3>
+                                <p className="text-gray-700 mb-4">
+                                  Your score: {dbQuizScore || quizScore}/{selectedCourse.quizQuestions.length} 
+                                  ({Math.round(((dbQuizScore || quizScore || 0) / selectedCourse.quizQuestions.length) * 100)}%)
+                                </p>
+                                {(() => {
+                                  const currentScore = dbQuizScore || quizScore || 0;
+                                  const totalQuestions = selectedCourse.quizQuestions.length;
+                                  const isPerfect = currentScore === totalQuestions;
+                                  const hasScore = currentScore > 0;
+                                  
+                                  if (isPerfect) {
+                                    return (
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-sm text-green-600 font-medium">
+                                          Perfect! You have completed this course with 100% score!
+                                        </p>
+                                        {/* No retake button for perfect score */}
+                                      </div>
+                                    );
+                                  } else if (hasScore) {
+                                    return (
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-sm text-orange-600 font-medium">
+                                          You need 100% score to complete this course. Try again!
+                                        </p>
+                                        <button
+                                          onClick={handleRetakeQuiz}
+                                          className="bg-gray-800 text-white px-3 py-1 text-xs rounded hover:bg-gray-900"
+                                        >
+                                          Retake Quiz
+                                        </button>
+                                      </div>
+                                    );
+                                  } else {
+                                    return (
+                                      <p className="text-sm text-gray-600">
+                                        Take the quiz to see your score.
+                                      </p>
+                                    );
+                                  }
+                                })()}
                               </div>
+                              
+                              {/* Quiz Results - show if we have quiz data */}
+                              {(quizSubmitted && quizScore !== null) || (isCompleted && dbQuizAnswers) ? (
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-gray-900">Quiz Results:</h4>
+                                  {selectedCourse.quizQuestions.map((question, index) => {
+                                    // Use current session answers or database answers
+                                    const currentAnswers = quizSubmitted ? quizAnswers : dbQuizAnswers;
+                                    
+                                    return (
+                                      <div key={question.id} className="border border-gray-200 rounded p-4">
+                                        <h5 className="font-medium text-gray-900 mb-2">
+                                          Question {index + 1}: {question.question}
+                                        </h5>
+                                        <div className="space-y-2">
+                                          {question.options.map((option, optionIndex) => {
+                                            const isSelected = currentAnswers?.[question.id] === optionIndex;
+                                            const isCorrect = optionIndex === question.correctAnswer;
+                                            const isWrong = isSelected && !isCorrect;
+                                            
+                                            return (
+                                              <div 
+                                                key={optionIndex} 
+                                                className={`p-2 rounded ${
+                                                  isCorrect ? 'bg-green-50 border border-green-200' :
+                                                  isWrong ? 'bg-red-50 border border-red-200' :
+                                                  'bg-gray-50'
+                                                }`}
+                                              >
+                                                <span className={`font-medium ${
+                                                  isCorrect ? 'text-green-800' :
+                                                  isWrong ? 'text-red-800' :
+                                                  'text-gray-700'
+                                                }`}>
+                                                  {option}
+                                                </span>
+                                                {isCorrect && <span className="ml-2 text-green-600 text-sm">Correct</span>}
+                                                {isWrong && <span className="ml-2 text-red-600 text-sm">Your answer</span>}
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : null}
                             </div>
-                          ))}
-                          <div className="mt-6">
-                            <button 
-                              onClick={submitQuiz}
-                              disabled={submittingQuiz}
-                              className="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                            >
-                              {submittingQuiz ? 'Submitting...' : 'Submit Quiz'}
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-center py-8">
-                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Quiz Completed!</h3>
-                            <p className="text-gray-700 mb-4">
-                              Your score: {quizScore}/{selectedCourse.quizQuestions.length} 
-                              ({Math.round((quizScore! / selectedCourse.quizQuestions.length) * 100)}%)
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Congratulations! You have completed this course.
-                            </p>
-                          </div>
-                        </div>
-                      )}
+                          );
+                        }
+                        
+                        // Show quiz form if not completed and not submitted
+                        if (shouldShowQuiz) {
+                          return (
+                            <>
+                              {selectedCourse.quizQuestions.map((question, index) => (
+                                <div key={question.id} className="border border-gray-200 rounded p-4">
+                                  <h4 className="font-medium text-gray-900 mb-3">
+                                    Question {index + 1}: {question.question}
+                                  </h4>
+                                  <div className="space-y-2">
+                                    {question.options.map((option, optionIndex) => (
+                                      <label key={optionIndex} className="flex items-center">
+                                        <input
+                                          type="radio"
+                                          name={`question-${question.id}`}
+                                          value={optionIndex}
+                                          checked={quizAnswers[question.id] === optionIndex}
+                                          onChange={() => handleQuizAnswerChange(question.id, optionIndex)}
+                                          className="mr-2"
+                                        />
+                                        <span className="text-gray-700">{option}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                              <div className="mt-6">
+                                <button 
+                                  onClick={submitQuiz}
+                                  disabled={submittingQuiz}
+                                  className="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                >
+                                  {submittingQuiz ? 'Submitting...' : 'Submit Quiz'}
+                                </button>
+                              </div>
+                            </>
+                          );
+                        }
+                        
+                        return null;
+                      })()}
                     </div>
                   ) : (
                     <div className="text-center py-8">
@@ -369,10 +580,54 @@ export default function StudentDashboard() {
               </div>
             )}
           </div>
+        ) : activeTab === 'completed' ? (
+          <div className="space-y-6">
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="text-gray-600">Loading completed courses...</div>
+              </div>
+            ) : completedCourses.length > 0 ? (
+              <div className="bg-white border border-gray-300 rounded p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Completed Courses</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {completedCourses.map((course) => (
+                    <div key={course.id} className="border border-gray-200 rounded p-4">
+                      <h4 className="font-medium text-gray-900 mb-2">{course.title}</h4>
+                      <p className="text-sm text-gray-600 mb-3">{course.description}</p>
+                      <div className="flex justify-between items-center">
+                        <div className="text-xs text-gray-500">
+                          <div>Instructor: {course.instructor.name}</div>
+                          <div>Price: ${(course.price * 200).toFixed(2)} USD</div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleViewCourse(course)}
+                            className="bg-gray-800 text-white px-3 py-1 text-xs rounded hover:bg-gray-900"
+                          >
+                            View Course
+                          </button>
+                          <span className="bg-gray-100 text-gray-800 px-2 py-1 text-xs rounded">
+                            Completed
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white border border-gray-300 rounded p-6 text-center">
+                <p className="text-gray-600">No completed courses yet</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Complete quizzes to move courses to this section
+                </p>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="space-y-6">
             <div className="bg-white border border-gray-300 rounded p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Certificates & Tokens</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Certificates</h3>
               <div className="text-center py-8">
                 <p className="text-gray-600">No certificates earned yet</p>
                 <p className="text-sm text-gray-500 mt-2">
