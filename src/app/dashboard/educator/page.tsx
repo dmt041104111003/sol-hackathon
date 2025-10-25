@@ -207,6 +207,11 @@ export default function EducatorDashboard() {
     setSelectedCourse(course);
   };
 
+  const handleMintNFT = (studentId: string, courseTitle: string) => {
+    // TODO: Implement NFT minting logic
+    alert(`Mint NFT for Student ID: ${studentId}\nCourse: ${courseTitle}\n\nThis feature will be implemented later.`);
+  };
+
   const getCompletedStudents = (course: Course) => {
     return course.enrollments.filter(enrollment => {
       const totalQuestions = course.quizQuestions?.length || 0;
@@ -361,7 +366,15 @@ export default function EducatorDashboard() {
                                 Completed: {new Date(enrollment.enrolledAt).toLocaleDateString()}
                               </p>
                             </div>
-                            <span className="text-sm text-gray-500">ID: {enrollment.userId}</span>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm text-gray-500">ID: {enrollment.userId}</span>
+                              <button
+                                onClick={() => handleMintNFT(enrollment.userId, selectedCourse.title)}
+                                className="bg-gray-800 text-white px-3 py-1 text-xs rounded hover:bg-gray-900"
+                              >
+                                Mint NFT
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
